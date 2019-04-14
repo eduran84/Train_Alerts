@@ -15,8 +15,8 @@ data:extend({
 		name = "tral-refresh-interval",
 		setting_type = "runtime-global",
 		type = "int-setting",
-		default_value = 120,
-		minimum_value = 60,
+		default_value = 60,
+		minimum_value = 20,
 		maximum_value = 600,
 	},
 	{

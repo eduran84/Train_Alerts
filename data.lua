@@ -24,7 +24,7 @@ default_gui["tral_transparent_frame"] = {
   type = "frame_style",
   use_header_filler = false,
   graphical_set = {
-    base = {filename = "__Train_Tracker__/graphics/frame.png", position = {0, 0}, corner_size = 8},
+    base = {filename = "__Train_Alerts__/graphics/frame.png", position = {0, 0}, corner_size = 8},
     shadow = default_dirt,
   }
 }
