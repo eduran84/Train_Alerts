@@ -20,9 +20,18 @@ default_gui["tral_toggle_button_with_alert"] = {
   },
 }
 
+default_gui["tral_transparent_frame"] = {
+  type = "frame_style",
+  use_header_filler = false,
+  graphical_set = {
+    base = {filename = "__Train_Tracker__/graphics/frame.png", position = {0, 0}, corner_size = 8},
+    shadow = default_dirt,
+  }
+}
+
 data:extend({{
 	type = "custom-input",
 	name = "tral-toggle-hotkey",
-	key_sequence = "SHIFT + E",
+	key_sequence = "SHIFT + T",
 	consuming = "none",
 }})

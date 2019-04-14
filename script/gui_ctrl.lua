@@ -28,7 +28,7 @@ local function get_button(pind)
   if button_flow[button_name] and button_flow[button_name].valid then
     return button_flow[button_name]
   else
-    local button = button_flow.add{type = "sprite-button", name = button_name, sprite = "item/locomotive"}
+    local button = button_flow.add{type = "sprite-button", style = "mod_gui_button", name = button_name, sprite = "item/locomotive"}
     return button
   end
 end
@@ -39,7 +39,7 @@ local function get_frame(pind)
   if frame_flow[frame_name] and frame_flow[frame_name].valid then
     return frame_flow[frame_name]
   else
-    local frame = frame_flow.add{type = "frame", name = frame_name, caption = "Train Alerts", direction = "vertical"}
+    local frame = frame_flow.add{type = "frame", name = frame_name, caption = {"tral.frame-caption"}, direction = "vertical", style = "tral_transparent_frame"}
     local tbl = frame.add{type = "table", column_count = 3}
     for i = 1, 3 do
       local label = tbl.add{type = "label", style = "ltnt_column_header", caption = {"tral.col-header-"..i}}
@@ -57,19 +57,18 @@ local function get_table(pind)
 end
 
 -- public functions
-local function on_init()
-  for pind in pairs(game.players) do
-    get_button(pind)
-  end
+local function player_init(pind)
+  local button = get_button(pind)
+  button.visible =  global.proc.show_button[pind]
 end
 
 local function set_alert_state(state, pind)
   if pind then
-    local style = state and (not get_frame(pind).visible) and "tral_toggle_button_with_alert" or "icon_button"
+    local style = state and (not get_frame(pind).visible) and "tral_toggle_button_with_alert" or "mod_gui_button"
     get_button(pind).style = style
   else
     for pind in pairs(game.players) do
-      local style = state and (not get_frame(pind).visible) and "tral_toggle_button_with_alert" or "icon_button"
+      local style = state and (not get_frame(pind).visible) and "tral_toggle_button_with_alert" or "mod_gui_button"
       get_button(pind).style = style
     end
   end
@@ -91,6 +90,10 @@ local function set_table_entires(entries)
   end
 end
 
+local function show(pind)
+    get_frame(pind).visible = true
+end
+
 -- event handlers
 local function on_click_handler(event)
   if event.element and event.element.name then
@@ -100,7 +103,7 @@ local function on_click_handler(event)
       get_frame(pind).visible = not get_frame(pind).visible
       set_alert_state(false, pind)
     else
-      local train_id = tonumber(match(name, "tral_label_(%d+)"))
+      local train_id = tonumber(match(name, "tral_trainbt_(%d+)"))
       if train_id and global.data.monitored_trains[train_id] then
         select_train(pind, global.data.monitored_trains[train_id].train)
         print("Clicked on train", train_id)
@@ -119,7 +122,8 @@ script.on_event("tral-toggle-hotkey",
 )
 
 return {
-  on_init = on_init,
+  player_init = player_init,
+  show = show,
   set_alert_state = set_alert_state,
   set_table_entires = set_table_entires,
   }

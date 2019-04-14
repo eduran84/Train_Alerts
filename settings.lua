@@ -6,6 +6,12 @@ data:extend({
 		default_value = true,
 	},
   {
+		name = "tral-open-on-alert",
+		setting_type = "runtime-per-user",
+		type = "bool-setting",
+		default_value = true,
+	},
+  {
 		name = "tral-refresh-interval",
 		setting_type = "runtime-global",
 		type = "int-setting",
