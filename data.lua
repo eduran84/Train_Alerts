@@ -3,7 +3,7 @@ local default_gui = data.raw["gui-style"].default
 
 default_gui["tral_toggle_button_with_alert"] = {
   type = "button_style",
-  parent = "icon_button",
+  parent = "mod_gui_button",
   default_graphical_set = {
     base = {position = {136, 17}, corner_size = 8},
     shadow = default_dirt,
