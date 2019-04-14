@@ -85,12 +85,10 @@ do--[[ on_tick_handler
   --]]
   local function button_params(id)
     return {
-      type = "sprite-button",
-      style = "recipe_slot_button",
-      number = tostring(proc.next_id),
+      type = "button",
+      style = "tral_button_row",
       name = "tral_trainbt_" .. proc.next_id,
       tooltip = {"tral.button-tooltip"},
-      sprite = "item/locomotive",
     }
   end
 
@@ -121,10 +119,11 @@ do--[[ on_tick_handler
           if train_data.train.valid then
             -- check if train is timed out
             if (tick - train_data.start_time) > monitor_states[train_data.state] then
-              table_entries[proc.N+1] = button_params(proc.next_id)
-              table_entries[proc.N+2] = {type = "label", style = "description_label", caption = train_state_dict[train_data.state]}
-              table_entries[proc.N+3] = {type = "label", style = "description_label", caption = ticks_to_timestring(tick - train_data.start_time)}
-              proc.N = proc.N+3
+              table_entries[proc.N] = {button = button_params(proc.next_id)}
+              table_entries[proc.N].label = {[1] = {type = "label", style = "tral_label_id", caption = tostring(proc.next_id)}}
+              table_entries[proc.N].label[2] = {type = "label", style = "tral_label_state", caption = train_state_dict[train_data.state]}
+              table_entries[proc.N].label[3] = {type = "label", style = "tral_label_time", caption = ticks_to_timestring(tick - train_data.start_time)}
+              proc.N = proc.N+1
               proc.alert_trains[proc.next_id] = train_data.train
               if not train_data.alert_triggered then
                 train_data.alert_triggered = true

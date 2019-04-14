@@ -6,7 +6,7 @@ local mod_gui = require("mod-gui")
 local frame_name = "tral-frame"
 local table_name = "tral_table"
 local button_name = "tral_toggle_button"
-local WIDTH = {50, 200, 50}
+local WIDTH = {58, 200, 50}
 
 --localize functions
 local pairs, match, tonumber = pairs, string.match, tonumber
@@ -40,7 +40,7 @@ local function get_frame(pind)
       local label = tbl.add{type = "label", style = "ltnt_column_header", caption = {"tral.col-header-"..i}}
       label.style.width = WIDTH[i]
     end
-    frame.add{type = "table", name = table_name, column_count = 3}
+    frame.add{type = "table", name = table_name, column_count = 1}
     frame.visible = false
     return frame
   end
@@ -66,12 +66,13 @@ local function set_table_entires(entries)
     local tbl = get_table(pind)
     if tbl then
       tbl.clear()
-      local counter = 0
       local tbl_add = tbl.add
-      for _,arg in pairs(entries) do
-        local label = tbl_add(arg)
-        label.style.width = WIDTH[(counter % 3)+1]
-        counter = counter + 1
+      for _, row in pairs(entries) do
+        local elem = tbl_add(row.button)
+        elem = elem.add{type = "flow", ignored_by_interaction = true}
+        for i = 1,3 do
+          elem.add(row.label[i])
+        end
       end
     end
   end
