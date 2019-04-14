@@ -1,6 +1,17 @@
 local default_gui = data.raw["gui-style"].default
 
 
+data:extend{
+  {
+    type = "sprite",
+    name = "tral_sprite_loco",
+    filename = "__base__/graphics/icons/diesel-locomotive.png",
+    width = 32,
+    height = 32,
+    scale = 1,
+  },
+}
+
 default_gui["tral_toggle_button_with_alert"] = {
   type = "button_style",
   parent = "mod_gui_button",

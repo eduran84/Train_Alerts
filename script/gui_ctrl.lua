@@ -18,7 +18,7 @@ local function get_button(pind)
   if button_flow[button_name] and button_flow[button_name].valid then
     return button_flow[button_name]
   else
-    local button = button_flow.add{type = "sprite-button", style = "mod_gui_button", name = button_name, sprite = "item/locomotive"}
+    local button = button_flow.add{type = "sprite-button", style = "mod_gui_button", name = button_name, sprite = "tral_sprite_loco"}
     return button
   end
 end
