@@ -1,6 +1,6 @@
 ---------------------------------------------------------------------------------------------------
-Version: 0.1.0
-Date: 2019-04-14
+Version: 0.2.0
+Date: 2019-04-15
 
-Initial release to mod portal.
-
+  Features:
+    - Initial release to Factorio mod portal.
