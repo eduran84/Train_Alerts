@@ -5,6 +5,9 @@ Date: 2019-04-15
   Changes:
     - Linked forum post as homepage.
 
+  Bugfixes:
+    - Fixed possible crash on startup (https://forums.factorio.com/viewtopic.php?p=423184#p423184).
+
 ---------------------------------------------------------------------------------------------------
 Version: 0.2.0
 Date: 2019-04-15

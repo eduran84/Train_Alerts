@@ -263,7 +263,7 @@ do
       if proc.state ~= "idle" then
         on_event(on_tick_event, on_tick_handler)
       end
-      if proc.ltn_event then
+      if proc.ltn_event and remote.interfaces["logistic-train-network"] then
         script.on_event(proc.ltn_event, get_ltn_stops)
       end
       log2("On_load finished.\nDebug data dump follows.\n", data, proc)
@@ -272,9 +272,6 @@ do
 
   script.on_configuration_changed(
     function(event)
-      if proc.ltn_event then
-        script.on_event(proc.ltn_event, nil)
-      end
       if game.active_mods["LogisticTrainNetwork"] then
         proc.ltn_event = remote.call("logistic-train-network", "on_stops_updated")
         data.ltn_stops = {}

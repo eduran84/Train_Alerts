@@ -40,7 +40,7 @@ local function get_frame(pind)
     frame.style.maximal_height = settings.get_player_settings(game.players[pind])["tral-window-height"].value
     local tbl = frame.add{type = "table", column_count = 3}
     for i = 1, 3 do
-      local label = tbl.add{type = "label", style = "ltnt_column_header", caption = {"tral.col-header-"..i}}
+      local label = tbl.add{type = "label", style = "caption_label", caption = {"tral.col-header-"..i}}
       label.style.width = WIDTH[i]
     end
     frame.add{
