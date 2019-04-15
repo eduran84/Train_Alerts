@@ -1,5 +1,5 @@
 -- load modules
-local log2 = require("__OpteraLib__.script.logger")()
+local log2 = require("__OpteraLib__.script.logger").log
 local mod_gui = require("mod-gui")
 
 -- constants

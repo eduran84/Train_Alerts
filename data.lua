@@ -1,5 +1,4 @@
 local default_gui = data.raw["gui-style"].default
-local log2 = require("__OpteraLib__.script.logger")()
 local WIDTH = {50, 200, 50}
 local TOT_WIDTH = 325
 

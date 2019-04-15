@@ -1,5 +1,5 @@
 -- load modules
-local log2, print = require("__OpteraLib__.script.logger")()
+local log2 = require("__OpteraLib__.script.logger").log
 local ui = require("script.gui_ctrl")
 
 -- set parameters and dictionaries
