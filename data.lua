@@ -63,15 +63,6 @@ local function rounded_button_graphical_set(x, y, glow, size)
   if glow then
     glow = rounded_button_glow(default_glow_color)
   end
-  log2("Creating graphical set:", x, y, glow, size, "\noutput:", {
-    base = {
-      filename = "__Train_Alerts__/graphics/gui.png",
-      position = {x, y},
-      corner_size = size
-    },
-    shadow = rounded_button_glow(default_dirt_color),
-    glow = glow,
-  })
   return {
     base = {
       filename = "__Train_Alerts__/graphics/gui.png",

@@ -1,11 +1,11 @@
 {
 "name": "Train_Alerts",
-"version": "0.2.0",
+"version": "0.2.1",
 "title": "Train Alert GUI",
 "author": "eduran",
 "contact": "https://forums.factorio.com/memberlist.php?mode=viewprofile&u=1699",
-"homepage": "",
+"homepage": "https://forums.factorio.com/viewtopic.php?f=190&t=69557",
 "description": "Adds a GUI displaying train-related alerts.",
 "factorio_version": "0.17",
-"dependencies": ["base >= 0.17.11", "OpteraLib >= 0.1.3", "? Logistic-Train-Network"]
+"dependencies": ["base >= 0.17.31", "OpteraLib >= 0.1.3", "? Logistic-Train-Network"]
 }
