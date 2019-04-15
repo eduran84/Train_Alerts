@@ -61,18 +61,22 @@ end
 -- for debugging, to simulate UI elements becoming invalid
 commands.add_command("reset", "",
   function(event)
-    if debug_log then
-      local frame = get_frame(event.player_index)
-      frame.destroy()
-    end
+    get_frame(pind).destroy()
+    get_button(pind).visible =  global.proc.show_button[pind]
   end
 )
 
 -- public functions
 local function player_init(pind)
-  get_frame(pind).destroy()
-  local button = get_button(pind)
-  button.visible =  global.proc.show_button[pind]
+  if pind then
+    get_frame(pind).destroy()
+    get_button(pind).visible =  global.proc.show_button[pind]
+  else
+    for pind in pairs(game.players) do
+      get_frame(pind).destroy()
+      get_button(pind).visible =  global.proc.show_button[pind]
+    end
+  end
 end
 
 local function set_alert_state(state, pind)

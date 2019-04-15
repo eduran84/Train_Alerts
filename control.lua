@@ -238,6 +238,14 @@ do
   local function get_ltn_stops(event)
     data.ltn_stops = event.logistic_train_stops
   end
+  local function register_ltn_event()
+    if remote.interfaces["logistic-train-network"] and remote.interfaces["logistic-train-network"].on_stops_updated then
+      script.on_event(remote.call("logistic-train-network", "on_stops_updated"), get_ltn_stops)
+      return true
+    end
+    return false
+  end
+
   script.on_init(
     function()
       global.data = {monitored_trains = {}, new_trains = {}}
@@ -249,9 +257,8 @@ do
         proc.show_button[pind] = settings.get_player_settings(player)["tral-show-button"].value
         ui.player_init(pind)
       end
-      if game.active_mods["LogisticTrainNetwork"] then
-        proc.ltn_event = remote.call("logistic-train-network", "on_stops_updated")
-        script.on_event(proc.ltn_event, get_ltn_stops)
+      if register_ltn_event() then
+        data.ltn_stops = {}
       end
       log2("First time initialization finished.\nDebug data dump follows.\n", data, proc)
     end
@@ -263,24 +270,21 @@ do
       if proc.state ~= "idle" then
         on_event(on_tick_event, on_tick_handler)
       end
-      if proc.ltn_event and remote.interfaces["logistic-train-network"] then
-        script.on_event(proc.ltn_event, get_ltn_stops)
-      end
+      register_ltn_event()
       log2("On_load finished.\nDebug data dump follows.\n", data, proc)
     end
   )
 
   script.on_configuration_changed(
     function(event)
-      if game.active_mods["LogisticTrainNetwork"] then
-        proc.ltn_event = remote.call("logistic-train-network", "on_stops_updated")
+      if register_ltn_event() then
         data.ltn_stops = {}
-        script.on_event(proc.ltn_event, get_ltn_stops)
-        log2("LTN has been enabled.")
       else
-        proc.ltn_event = nil
         data.ltn_stops = nil
-        log2("LTN has been disabled.")
+      end
+      if event.mod_changes["Train_Alerts"] then
+        ui.player_init()
+        proc.ltn_event = nil
       end
     end
   )
