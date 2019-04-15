@@ -57,7 +57,7 @@ do--[[ on_state_change
         -- train not monitored, but should be
         if proc.ltn_event and monitor_states[train_state.wait_station] and new_state == train_state.wait_station then
           -- dont trigger alert fors trains stopped at LTN depots
-          local stop_id = event.train.station.unit_number
+          local stop_id = event.train.station and event.train.station.unit_number
           if not(stop_id and data.ltn_stops[stop_id] and data.ltn_stops[stop_id].isDepot) then
             data.monitored_trains[train_id] = {state = new_state, start_time = game.tick, train = event.train}
             if debug_log then log2("Monitoring train", train_id, ". Dataset:", data.monitored_trains[train_id]) end
@@ -249,7 +249,7 @@ do
         proc.show_button[pind] = settings.get_player_settings(player)["tral-show-button"].value
         ui.player_init(pind)
       end
-      if game.active_mods["Logistic-Train-Network"] then
+      if game.active_mods["LogisticTrainNetwork"] then
         proc.ltn_event = remote.call("logistic-train-network", "on_stops_updated")
         script.on_event(proc.ltn_event, get_ltn_stops)
       end
@@ -275,8 +275,9 @@ do
       if proc.ltn_event then
         script.on_event(proc.ltn_event, nil)
       end
-      if game.active_mods["Logistic-Train-Network"] then
+      if game.active_mods["LogisticTrainNetwork"] then
         proc.ltn_event = remote.call("logistic-train-network", "on_stops_updated")
+        data.ltn_stops = {}
         script.on_event(proc.ltn_event, get_ltn_stops)
         log2("LTN has been enabled.")
       else
