@@ -13,6 +13,15 @@ data:extend({
 		default_value = true,
     order = "b"
 	},
+  {
+		name = "tral-window-height",
+		setting_type = "runtime-per-user",
+		type = "int-setting",
+		default_value = 300,
+		minimum_value = 200,
+		maximum_value = 1500,
+    order = "c"
+	},
 
   {
 		name = "tral-refresh-interval",

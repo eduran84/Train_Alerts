@@ -5,6 +5,7 @@ local mod_gui = require("mod-gui")
 -- constants
 local frame_name = "tral-frame"
 local table_name = "tral_table"
+local pane_name = "tral-scroll"
 local button_name = "tral_toggle_button"
 local WIDTH = {58, 200, 50}
 
@@ -35,6 +36,7 @@ local function get_frame(pind)
       direction = "vertical",
       style = "tral_transparent_frame"
     }
+    frame.style.maximal_height = settings.get_player_settings(game.players[pind])["tral-window-height"].value
     local tbl = frame.add{type = "table", column_count = 3}
     for i = 1, 3 do
       local label = tbl.add{type = "label", style = "ltnt_column_header", caption = {"tral.col-header-"..i}}
@@ -52,6 +54,7 @@ end
 
 -- public functions
 local function player_init(pind)
+  get_frame(pind).destroy()
   local button = get_button(pind)
   button.visible =  global.proc.show_button[pind]
 end

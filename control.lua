@@ -213,7 +213,7 @@ do
       if event.setting == "tral-open-on-alert" then
         proc.show_on_alert[event.player_index] = settings.get_player_settings(player)["tral-open-on-alert"].value or nil
       end
-      if event.setting == "tral-show-button" then
+      if event.setting == "tral-show-button" or event.setting == "tral-window-height" then
         proc.show_button[event.player_index] = settings.get_player_settings(player)["tral-show-button"].value
         ui.player_init(event.player_index)
       end
@@ -287,3 +287,4 @@ do
     end
   )
 end
+
