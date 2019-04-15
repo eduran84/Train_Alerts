@@ -29,6 +29,7 @@ local function get_frame(pind)
   if frame_flow[frame_name] and frame_flow[frame_name].valid then
     return frame_flow[frame_name]
   else
+    if debug_log then log2("Rebuilding GUI for player", game.players[pind].name) end
     local frame = frame_flow.add{
       type = "frame",
       name = frame_name,
@@ -42,15 +43,30 @@ local function get_frame(pind)
       local label = tbl.add{type = "label", style = "ltnt_column_header", caption = {"tral.col-header-"..i}}
       label.style.width = WIDTH[i]
     end
-    frame.add{type = "table", name = table_name, column_count = 1}
+    frame.add{
+      type = "scroll-pane",
+      vertical_scroll_policy = "auto",
+      horizontal_scroll_policy = "never",
+      name = pane_name
+    }.add{type = "table", name = table_name, column_count = 1}
     frame.visible = false
     return frame
   end
 end
 
 local function get_table(pind)
-  return get_frame(pind).visible and get_frame(pind)[table_name]
+  return get_frame(pind).visible and get_frame(pind)[pane_name] and get_frame(pind)[pane_name][table_name]
 end
+
+-- for debugging, to simulate UI elements becoming invalid
+commands.add_command("reset", "",
+  function(event)
+    if debug_log then
+      local frame = get_frame(event.player_index)
+      frame.destroy()
+    end
+  end
+)
 
 -- public functions
 local function player_init(pind)
@@ -90,9 +106,9 @@ do
   local open_train_gui = require("__OpteraLib__.script.train").open_train_gui
   local function on_click_handler(event)
     if event.element and event.element.name then
+      if debug_log then log2("on_gui_click event received:", event) end
       local name = event.element.name
       local pind = event.player_index
-      if debug_log then log2("on_gui_click event received:", event) end
       if name == button_name then
         get_frame(pind).visible = not get_frame(pind).visible
         set_alert_state(false, pind)
