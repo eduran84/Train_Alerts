@@ -1,9 +1,16 @@
 ---------------------------------------------------------------------------------------------------
-Version: 0.2.2
+Version: 0.2.3
 Date: 2019-04-16
 
   Changes:
     - Fixed typo in setting tooltip, removed periods from status descriptions (thanks, Pi-C!)
+
+  Bugfixes:
+    - Fixed that trains waiting at LTN depots would cause an alert.
+
+---------------------------------------------------------------------------------------------------
+Version: 0.2.2
+Date: 2019-04-15
 
   Bugfixes:
     - Fixed crash when disabling LTN.
