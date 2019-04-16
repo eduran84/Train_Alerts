@@ -55,7 +55,7 @@ do--[[ on_state_change
     else
       if monitor_states[new_state] then
         -- train not monitored, but should be
-        if proc.ltn_event and monitor_states[train_state.wait_station] and new_state == train_state.wait_station then
+        if data.ltn_stops and monitor_states[train_state.wait_station] and new_state == train_state.wait_station then
           -- dont trigger alert fors trains stopped at LTN depots
           local stop_id = event.train.station and event.train.station.unit_number
           if not(stop_id and data.ltn_stops[stop_id] and data.ltn_stops[stop_id].isDepot) then

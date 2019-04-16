@@ -1,6 +1,9 @@
 ---------------------------------------------------------------------------------------------------
 Version: 0.2.2
-Date: 2019-04-15
+Date: 2019-04-16
+
+  Changes:
+    - Fixed typo in setting tooltip, removed periods from status descriptions (thanks, Pi-C!)
 
   Bugfixes:
     - Fixed crash when disabling LTN.
