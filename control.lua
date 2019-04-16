@@ -200,7 +200,7 @@ do
       monitor_states[train_state.manual_control_stop] = set["tral-manual-timeout"].value * 60
     else
       ok_states[train_state.manual_control] = true
-      monitor_states[train_state.manual_control_stop] = true
+      ok_states[train_state.manual_control_stop] = true
     end
   end
   update_timeouts() -- call once for initial setup
