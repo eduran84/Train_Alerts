@@ -3,6 +3,7 @@ log2 = require("__OpteraLib__.script.logger").log
 debug_log = settings.global["tral-debug-level"].value
 local defs = require("script.defines")
 local ui = require("script.gui_ctrl")
+local Queue = require("script.queue")
 
 -- set parameters and dictionaries
 local update_interval = settings.global["tral-refresh-interval"]
@@ -35,6 +36,7 @@ do
     if data.monitored_trains[train_id] then
       -- remove or update already monitored train
       if ok_states[new_state] then
+        data.alert_queue[data.monitored_trains[train_id].alert_time] = nil
         data.monitored_trains[train_id] = nil
         if debug_log then log2("No longer monitoring train", train_id) end
       elseif monitor_states[new_state] then
@@ -57,13 +59,13 @@ do
         end
       end -- if new_state == train_state.wait_station ...
       local alert_time = game.tick + monitor_states[new_state]
+      alert_time = Queue.insert(data.alert_queue, alert_time, train_id)
       data.monitored_trains[train_id] = {
         state = new_state,
         start_time = game.tick,
         alert_time = alert_time,
         train = event.train
       }
-
       if debug_log then
         log2("Monitoring train", train_id, ". Dataset:", data.monitored_trains[train_id])
       end
@@ -72,6 +74,7 @@ do
 
   script.on_event(defines.events.on_train_changed_state, on_state_change)
 end
+
 local on_tick_handler
 do--[[ on_tick_handler
   * after being started by start_on_tick function, this runs on every
@@ -247,7 +250,7 @@ do
 
   script.on_init(
     function()
-      global.data = {monitored_trains = {}, new_trains = {}}
+      global.data = {monitored_trains = {}, new_trains = {}, alert_queue = {}}
       global.proc = {state = "idle", show_on_alert = {}, show_button = {}}
       data = global.data
       proc = global.proc

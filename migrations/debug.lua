@@ -3,3 +3,5 @@ global.gui = {}
 global.gui[frame_name] = {}
 global.gui.show_on_alert = {}
 global.gui.show_button = {}
+
+global.data.alert_queue = {}
