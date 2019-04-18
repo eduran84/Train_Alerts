@@ -1,11 +1,11 @@
 -- load modules
-local log2 = require("__OpteraLib__.script.logger").log
+log2 = require("__OpteraLib__.script.logger").log
+debug_log = settings.global["tral-debug-level"].value
+local defs = require("script.defines")
 local ui = require("script.gui_ctrl")
 
 -- set parameters and dictionaries
-debug_log = settings.global["tral-debug-level"].value
 local update_interval = settings.global["tral-refresh-interval"]
-local trains_per_tick = 15
 local monitor_states, ok_states
 
 --localize functions
@@ -19,47 +19,59 @@ end
 -- localize variables
 local data, proc
 local on_tick_event = defines.events.on_tick
-local train_state = defines.train_state
-local train_state_dict = require("script.defines").dicts.train_state
 
--- runtime code
-do--[[ on_state_change
+do
+  --[[ on_state_change
   * triggered on_train_changed_state
   * adds trains with potential alert states to data.monitored_trains
   * removes trains from data.monitored_trains when alert state clears
   --]]
+
+  local wait_station_state = defines.train_state.wait_station
   local function on_state_change(event)
     local train_id = event.train.id
     local new_state = event.train.state
+
     if data.monitored_trains[train_id] then
-      -- train already monitored, remove or update depending on new_state
+      -- remove or update already monitored train
       if ok_states[new_state] then
         data.monitored_trains[train_id] = nil
         if debug_log then log2("No longer monitoring train", train_id) end
       elseif monitor_states[new_state] then
         data.monitored_trains[train_id].state = new_state
-        if debug_log then log2("Updated train", train_id, ". New dataset:", data.monitored_trains[train_id]) end
-      end
-    else
-      if monitor_states[new_state] then
-        -- train not monitored, but should be
-        if data.ltn_stops and monitor_states[train_state.wait_station] and new_state == train_state.wait_station then
-          -- dont trigger alert fors trains stopped at LTN depots
-          local stop_id = event.train.station and event.train.station.unit_number
-          if not(stop_id and data.ltn_stops[stop_id] and data.ltn_stops[stop_id].isDepot) then
-            data.monitored_trains[train_id] = {state = new_state, start_time = game.tick, train = event.train}
-            if debug_log then log2("Monitoring train", train_id, ". Dataset:", data.monitored_trains[train_id]) end
-          end
-        else
-          data.monitored_trains[train_id] = {state = new_state, start_time = game.tick, train = event.train}
-          if debug_log then log2("Monitoring train", train_id, ". Dataset:", data.monitored_trains[train_id]) end
+        if debug_log then
+          log2("Updated train", train_id, ". New dataset:", data.monitored_trains[train_id])
         end
       end
-    end
-  end
-  on_event(defines.events.on_train_changed_state, on_state_change)
-end
 
+    elseif monitor_states[new_state] then
+      --- add unmonitored train to monitor list
+      if new_state == wait_station_state and
+          data.ltn_stops and
+          monitor_states[wait_station_state] then
+        -- dont trigger alert fors trains stopped at LTN depots
+        local stop_id = event.train.station and event.train.station.unit_number
+        if stop_id and data.ltn_stops[stop_id] and
+            data.ltn_stops[stop_id].isDepot then
+          return
+        end
+      end -- if new_state == train_state.wait_station ...
+      local alert_time = game.tick + monitor_states[new_state]
+      data.monitored_trains[train_id] = {
+        state = new_state,
+        start_time = game.tick,
+        alert_time = alert_time,
+        train = event.train
+      }
+
+      if debug_log then
+        log2("Monitoring train", train_id, ". Dataset:", data.monitored_trains[train_id])
+      end
+    end -- elseif monitor_states[new_state]
+  end -- function on_state_change
+
+  script.on_event(defines.events.on_train_changed_state, on_state_change)
+end
 local on_tick_handler
 do--[[ on_tick_handler
   * after being started by start_on_tick function, this runs on every
@@ -71,6 +83,9 @@ do--[[ on_tick_handler
                create UI entries for train which are timed out
       update:  update visible UIs with new data
   --]]
+
+  local trains_per_tick = defs.constants.trains_per_tick
+  local train_state_dict =defs.dicts.train_state
   local function button_params(id)
     return {
       type = "button",
@@ -142,9 +157,8 @@ do--[[ on_tick_handler
       proc.state = "idle"
     end
   end
-end
 
-do--[[ start_on_tick
+  --[[ start_on_tick
   * starts on_tick_handler every update_interval ticks
   --]]
   local function start_on_tick(event)
@@ -158,6 +172,7 @@ end
 
 -- initialization and settings
 do
+  local train_state = defines.train_state
   local function update_timeouts()
     local set = settings.global
     update_interval = set["tral-refresh-interval"]
@@ -247,17 +262,20 @@ do
     function()
       data = global.data
       proc = global.proc
+      ui.on_load()
       if proc.state ~= "idle" then
         on_event(on_tick_event, on_tick_handler)
       end
       register_ltn_event()
-      log2("On_load finished.\nDebug data dump follows.\n", data, proc)
+      if debug_log then
+        log2("On_load finished.\nDebug data dump follows.\n", data, proc)
+      end
     end
   )
 
 
--- DEBUG
-local mg = require("mod-gui")
+  -- DEBUG
+  local mg = require("mod-gui")
   script.on_configuration_changed(
     function(event)
       if register_ltn_event() then

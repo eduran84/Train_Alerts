@@ -1,8 +1,10 @@
 local defs = {
   names = {gui = {}},
   dicts = {},
+  constants = {},
 }
 
+-- EUI names
 defs.names.gui.shared = {
   vertical_spacer = "eui-shr/vertical-spacer",
   horizontal_spacer = "eui-shr/horizontal-spacer",
@@ -22,6 +24,8 @@ defs.names.gui.frame = {
   title = "eui-frm/title",
 }
 
+defs.constants.trains_per_tick = 15
+
 defs.dicts.train_state = {
   [defines.train_state.on_the_path] = {"train-states.on_the_path"},
   [defines.train_state.path_lost] = {"train-states.path_lost"},
@@ -34,6 +38,5 @@ defs.dicts.train_state = {
   [defines.train_state.manual_control_stop] = {"train-states.manual_control_stop"},
   [defines.train_state.manual_control] = {"train-states.manual_control"},
 }
-
 
 return defs

@@ -19,8 +19,12 @@ function EUI_Frame.build(args)
   new_frame.frame = frame
   new_frame.title_flow = title_flow
   new_frame.body = outer_flow.add{type = "flow", direction = args.direction or "vertical"}
-  setmetatable(new_frame, EUI_Frame.mt)
+  EUI_Frame.restore_mt(new_frame)
   return new_frame
+end
+
+function EUI_Frame.restore_mt(frame_obj)
+  setmetatable(frame_obj, EUI_Frame.mt)
 end
 
 

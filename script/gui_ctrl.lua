@@ -88,6 +88,12 @@ local function init()
   end
 end
 
+local function on_load()
+  log2(global.proc, global.gui)
+  for pind, frame_obj in pairs(global.gui[frame_name]) do
+    EUI_Frame.restore_mt(frame_obj)
+  end
+end
 
 local function set_alert_state(state, pind)
   local style = state and (not get_frame(pind).frame.visible) and "tral_toggle_button_with_alert" or "mod_gui_button"
@@ -147,6 +153,7 @@ script.on_event("tral-toggle-hotkey",
 
 return {
   init = init,
+  on_load = on_load,
   player_init = player_init,
   show = show,
   set_alert_state = set_alert_state,
