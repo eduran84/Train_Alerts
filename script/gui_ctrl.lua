@@ -127,11 +127,13 @@ do
   script.on_event(defines.events.on_gui_click, on_click_handler)
 end
 
+local toggle_key_handler = require("script.eui.EUI_Main")
 script.on_event("tral-toggle-hotkey",
   function(event)
     if debug_log then log2("Toggle hotkey pressed. Event data:", event) end
     local pind = event.player_index
     get_frame(pind).visible = not get_frame(pind).visible
+    toggle_key_handler(event)
   end
 )
 

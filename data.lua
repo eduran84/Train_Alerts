@@ -1,3 +1,4 @@
+require("prototypes.style")
 local default_gui = data.raw["gui-style"].default
 local WIDTH = {50, 200, 50}
 local TOT_WIDTH = 325
@@ -31,7 +32,7 @@ default_gui["tral_toggle_button_with_alert"] = {
     shadow = default_dirt,
   },
 }
-
+--[[
 default_gui["tral_transparent_frame"] = {
   type = "frame_style",
   use_header_filler = false,
@@ -42,7 +43,7 @@ default_gui["tral_transparent_frame"] = {
     shadow = default_dirt,
   }
 }
-
+--]]
 local function rounded_button_glow(tint_value)
   return
   {

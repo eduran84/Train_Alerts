@@ -20,19 +20,7 @@ end
 local data, proc
 local on_tick_event = defines.events.on_tick
 local train_state = defines.train_state
-
-local train_state_dict = {
-  [train_state.on_the_path] = {"train-states.on_the_path"},
-  [train_state.path_lost] = {"train-states.path_lost"},
-  [train_state.no_schedule] = {"train-states.no_schedule"},
-  [train_state.no_path] = {"train-states.no_path"},
-  [train_state.arrive_signal] = {"train-states.arrive_signal"},
-  [train_state.wait_signal] = {"train-states.wait_signal"},
-  [train_state.arrive_station] = {"train-states.arrive_station"},
-  [train_state.wait_station] = {"train-states.wait_station"},
-  [train_state.manual_control_stop] = {"train-states.manual_control_stop"},
-  [train_state.manual_control] = {"train-states.manual_control"},
-}
+local train_state_dict = require("script.defines").dicts.train_states
 
 -- runtime code
 do--[[ on_state_change
