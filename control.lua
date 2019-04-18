@@ -20,7 +20,7 @@ end
 local data, proc
 local on_tick_event = defines.events.on_tick
 local train_state = defines.train_state
-local train_state_dict = require("script.defines").dicts.train_states
+local train_state_dict = require("script.defines").dicts.train_state
 
 -- runtime code
 do--[[ on_state_change
@@ -130,7 +130,7 @@ do--[[ on_tick_handler
     elseif proc.state == "update" then
       if proc.alert_state then
         for pind in pairs(game.players) do
-          if proc.show_on_alert[pind] then
+          if global.gui.show_on_alert[pind] then
             ui.show(pind)
           else
             ui.set_alert_state(true, pind)
@@ -199,10 +199,9 @@ do
       update_timeouts()
       local player = game.players[event.player_index]
       if event.setting == "tral-open-on-alert" then
-        proc.show_on_alert[event.player_index] = settings.get_player_settings(player)["tral-open-on-alert"].value or nil
+        global.gui.show_on_alert[event.player_index] = settings.get_player_settings(player)["tral-open-on-alert"].value or nil
       end
       if event.setting == "tral-show-button" or event.setting == "tral-window-height" then
-        proc.show_button[event.player_index] = settings.get_player_settings(player)["tral-show-button"].value
         ui.player_init(event.player_index)
       end
       log2("Mod settings changed by player", player.name, ".\nSetting changed event:", event, "\nUpdated state dicts:", monitor_states, ok_states)
@@ -214,11 +213,8 @@ end
 
 script.on_event(defines.events.on_player_created,
   function(event)
-    local player = game.players[event.player_index]
-    proc.show_on_alert[event.player_index] =  settings.get_player_settings(player)["tral-open-on-alert"].value or nil
-    proc.show_button[event.player_index] = settings.get_player_settings(player)["tral-show-button"].value
     ui.player_init(event.player_index)
-    log2("New player", player.name, "created.")
+    log2("New player", game.players[event.player_index].name, "created.")
   end
 )
 
@@ -240,11 +236,7 @@ do
       global.proc = {state = "idle", show_on_alert = {}, show_button = {}}
       data = global.data
       proc = global.proc
-      for pind, player in pairs(game.players) do
-        proc.show_on_alert[pind] =  settings.get_player_settings(player)["tral-open-on-alert"].value or nil
-        proc.show_button[pind] = settings.get_player_settings(player)["tral-show-button"].value
-        ui.player_init(pind)
-      end
+      ui.init()
       if register_ltn_event() then
         data.ltn_stops = {}
       end
@@ -263,6 +255,9 @@ do
     end
   )
 
+
+-- DEBUG
+local mg = require("mod-gui")
   script.on_configuration_changed(
     function(event)
       if register_ltn_event() then
@@ -271,9 +266,12 @@ do
         data.ltn_stops = nil
       end
       if event.mod_changes["Train_Alerts"] then
-        ui.player_init()
+        ui.init()
         proc.ltn_event = nil
       end
+      --DEBUG
+      mg.get_frame_flow(game.players[1]).clear()
+
     end
   )
 end

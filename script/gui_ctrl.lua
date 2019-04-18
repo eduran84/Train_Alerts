@@ -1,7 +1,7 @@
 -- load modules
 local log2 = require("__OpteraLib__.script.logger").log
 local mod_gui = require("mod-gui")
-
+local EUI_Frame = require("script.eui.EUI_Frame")
 -- constants
 local frame_name = "tral-frame"
 local table_name = "tral_table"
@@ -26,61 +26,71 @@ end
 
 local function get_frame(pind)
   local frame_flow = mod_gui.get_frame_flow(game.players[pind])
-  if frame_flow[frame_name] and frame_flow[frame_name].valid then
-    return frame_flow[frame_name]
+  local frame_obj = global.gui[frame_name][pind]
+  if frame_obj and frame_obj:is_valid() then
+    return frame_obj
   else
     if debug_log then log2("Rebuilding GUI for player", game.players[pind].name) end
-    local frame = frame_flow.add{
-      type = "frame",
-      name = frame_name,
+    if frame_obj then frame_obj:destroy() end
+    frame_obj = EUI_Frame.build{
+      parent = frame_flow,
       caption = {"tral.frame-caption"},
       direction = "vertical",
-      style = "tral_transparent_frame"
+      style = "tral_transparent_frame",
     }
-    frame.style.maximal_height = settings.get_player_settings(game.players[pind])["tral-window-height"].value
-    local tbl = frame.add{type = "table", column_count = 3}
+    frame_obj.frame.style.maximal_height = settings.get_player_settings(game.players[pind])["tral-window-height"].value
+
+    local tbl = frame_obj:add{type = "table", column_count = 3}
     for i = 1, 3 do
       local label = tbl.add{type = "label", style = "caption_label", caption = {"tral.col-header-"..i}}
       label.style.width = WIDTH[i]
     end
-    frame.add{
+    frame_obj:add{
       type = "scroll-pane",
       vertical_scroll_policy = "auto",
       horizontal_scroll_policy = "never",
       name = pane_name
     }.add{type = "table", name = table_name, column_count = 1}
-    frame.visible = false
-    return frame
+    frame_obj:hide()
+    global.gui[frame_name][pind] = frame_obj
+    return frame_obj
   end
 end
 
 local function get_table(pind)
-  return get_frame(pind).visible and get_frame(pind)[pane_name] and get_frame(pind)[pane_name][table_name]
+  local frame_obj = get_frame(pind)
+  return frame_obj:is_visible() and frame_obj.body[pane_name] and frame_obj.body[pane_name][table_name]
 end
 
 -- for debugging, to simulate UI elements becoming invalid
 commands.add_command("reset", "",
   function(event)
-    get_frame(pind).destroy()
-    get_button(pind).visible =  global.proc.show_button[pind]
+    game.players[event.player_index].gui.left.clear()
+    global.gui[frame_name] = {}
   end
 )
 
 -- public functions
 local function player_init(pind)
-  if pind then
-    get_frame(pind).destroy()
-    get_button(pind).visible =  global.proc.show_button[pind]
-  else
-    for pind in pairs(game.players) do
-      get_frame(pind).destroy()
-      get_button(pind).visible =  global.proc.show_button[pind]
-    end
+  local player = game.players[pind]
+  global.gui.show_on_alert[pind] =  settings.get_player_settings(player)["tral-open-on-alert"].value or nil
+  global.gui.show_button[pind] = settings.get_player_settings(player)["tral-show-button"].value
+  get_button(pind).visible =  global.gui.show_button[pind]
+end
+
+local function init()
+  global.gui = {}
+  global.gui[frame_name] = {}
+  global.gui.show_on_alert = {}
+  global.gui.show_button = {}
+  for pind, player in pairs(game.players) do
+    player_init(pind)
   end
 end
 
+
 local function set_alert_state(state, pind)
-  local style = state and (not get_frame(pind).visible) and "tral_toggle_button_with_alert" or "mod_gui_button"
+  local style = state and (not get_frame(pind).frame.visible) and "tral_toggle_button_with_alert" or "mod_gui_button"
   get_button(pind).style = style
 end
 
@@ -102,7 +112,7 @@ local function set_table_entires(entries)
 end
 
 local function show(pind)
-  get_frame(pind).visible = true
+  get_frame(pind):show()
 end
 
 -- event handlers
@@ -114,7 +124,7 @@ do
       local name = event.element.name
       local pind = event.player_index
       if name == button_name then
-        get_frame(pind).visible = not get_frame(pind).visible
+        get_frame(pind):toggle()
         set_alert_state(false, pind)
       else
         local train_id = tonumber(match(name, "tral_trainbt_(%d+)"))
@@ -127,17 +137,16 @@ do
   script.on_event(defines.events.on_gui_click, on_click_handler)
 end
 
-local toggle_key_handler = require("script.eui.EUI_Main")
+--local toggle_key_handler = require("script.eui.EUI_Main")
 script.on_event("tral-toggle-hotkey",
   function(event)
     if debug_log then log2("Toggle hotkey pressed. Event data:", event) end
-    local pind = event.player_index
-    get_frame(pind).visible = not get_frame(pind).visible
-    toggle_key_handler(event)
+    get_frame(event.player_index):toggle()
   end
 )
 
 return {
+  init = init,
   player_init = player_init,
   show = show,
   set_alert_state = set_alert_state,

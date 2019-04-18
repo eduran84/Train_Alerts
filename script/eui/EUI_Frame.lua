@@ -10,7 +10,7 @@ function EUI_Frame.build(args)
   local new_frame = {}
   local parent = args.parent
 
-  local frame = parent.add{type = "frame", style = sty.outer_frame}
+  local frame = parent.add{type = "frame", style = args.style or sty.outer_frame}
   local outer_flow = frame.add{type = "flow", direction = "vertical"}
   local title_flow = outer_flow.add{type = "flow", style = sty.title_flow}
   title_flow.add{type = "label", style = sty.title, caption = args.caption, tooltip = args.tooltip}
@@ -32,17 +32,36 @@ function methods.add_title_button(o, arg_table)
   return o.title_flow.add(arg_table)
 end
 
+function methods.show(o)
+  o.frame.visible = true
+end
+function methods.hide(o)
+  o.frame.visible = false
+end
+function methods.toggle(o)
+  o.frame.visible = not o.frame.visible
+end
+function methods.is_visible(o)
+  return o.frame.visible
+end
+function methods.is_valid(o)
+  return o.body.valid
+end
+
+
 function methods.clear(o)
   o.body.clear()
 end
 function methods.destroy(o)
- o.frame.destroy()
+  if o.frame.valid then
+    o.frame.destroy()
+  end
+  o = nil
 end
 
 function methods.style(o)
   return o.frame.style
 end
-
 
 return EUI_Frame
 
