@@ -5,3 +5,4 @@ global.gui.show_on_alert = {}
 global.gui.show_button = {}
 
 global.data.alert_queue = {}
+global.proc = {table_entries = {}}

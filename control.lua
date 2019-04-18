@@ -9,17 +9,21 @@ local Queue = require("script.queue")
 local update_interval = settings.global["tral-refresh-interval"]
 local monitor_states, ok_states
 
+-- localize variables
+local data, proc
+
 --localize functions
 local next, pairs, format, tostring = next, pairs, string.format, tostring
-local on_event = script.on_event
 local ticks_to_timestring
 do
   ticks_to_timestring = require("__OpteraLib__.script.misc").ticks_to_timestring
 end
-
--- localize variables
-local data, proc
-local on_tick_event = defines.events.on_tick
+local function remove_monitored_train(train_id)
+  local traindata = data.monitored_trains[train_id]
+  proc.table_entries[train_id] = nil
+  data.alert_queue[traindata.alert_time or 0] = nil
+  traindata = nil
+end
 
 do
   --[[ on_state_change
@@ -36,8 +40,7 @@ do
     if data.monitored_trains[train_id] then
       -- remove or update already monitored train
       if ok_states[new_state] then
-        data.alert_queue[data.monitored_trains[train_id].alert_time] = nil
-        data.monitored_trains[train_id] = nil
+        remove_monitored_train(train_id)
         if debug_log then log2("No longer monitoring train", train_id) end
       elseif monitor_states[new_state] then
         data.monitored_trains[train_id].state = new_state
@@ -88,65 +91,28 @@ do--[[ on_tick_handler
   --]]
 
   local trains_per_tick = defs.constants.trains_per_tick
-  local train_state_dict =defs.dicts.train_state
+  local train_state_dict = defs.dicts.train_state
   local function button_params(id)
     return {
       type = "button",
       style = "tral_button_row",
-      name = "tral_trainbt_" .. proc.next_id,
+      name = "tral_trainbt_" .. id,
       tooltip = {"tral.button-tooltip"},
     }
   end
 
   on_tick_handler = function(event)
-    if proc.state == "init" then
-      -- copy monitored trains to processor dataset
-      proc.dataset = {}
-      for id, train_data in pairs(data.monitored_trains) do
-        proc.dataset[id] = train_data
-      end
-      -- reset processor data
-      proc.N = 0
-      proc.table_entries = {}
-      proc.alert_trains = {}
-      proc.alert_state = false
-      proc.state = "process"
-      proc.next_id = nil
-      if debug_log then log2("Starting data processing.\nTrains to process:", proc.dataset) end
-    elseif proc.state == "process" then
-      local table_entries = proc.table_entries
-      local counter = 0
-      local train_data
-      local tick = event.tick
-      while counter < trains_per_tick do
-        proc.next_id, train_data = next(proc.dataset, proc.next_id)
-        if proc.next_id then
-          counter = counter + 1
-          if train_data.train.valid then
-            -- check if train is timed out
-            if (tick - train_data.start_time) > monitor_states[train_data.state] then
-              table_entries[proc.N] = {button = button_params(proc.next_id)}
-              table_entries[proc.N].label = {[1] = {type = "label", style = "tral_label_id", caption = tostring(proc.next_id)}}
-              table_entries[proc.N].label[2] = {type = "label", style = "tral_label_state", caption = train_state_dict[train_data.state]}
-              table_entries[proc.N].label[3] = {type = "label", style = "tral_label_time", caption = ticks_to_timestring(tick - train_data.start_time)}
-              proc.N = proc.N+1
-              proc.alert_trains[proc.next_id] = train_data.train
-              if not train_data.alert_triggered then
-                train_data.alert_triggered = true
-                proc.alert_state = true
-              end
-            end
-          else
-            data.monitored_trains[proc.next_id] = nil
-          end
-        else
-          proc.state = "update"
-          break
-        end
-      end
-
-    elseif proc.state == "update" then
-      if proc.alert_state then
+    local train_id = Queue.pop(data.alert_queue, event.tick)
+    local table_entries = proc.table_entries
+    if not train_id then return end
+    local train_data = data.monitored_trains[train_id]
+    if train_data.train.valid then
+      table_entries[train_id] = {button = button_params(train_id)}
+      table_entries[train_id].label = {[1] = {type = "label", style = "tral_label_id", caption = tostring(train_id)}}
+      table_entries[train_id].label[2] = {type = "label", style = "tral_label_state", caption = train_state_dict[train_data.state]}
+      table_entries[train_id].label[3] = {type = "label", style = "tral_label_time", caption = ticks_to_timestring(event.tick - train_data.start_time)}
+      if not train_data.alert_triggered then
+        train_data.alert_triggered = true
         for pind in pairs(game.players) do
           if global.gui.show_on_alert[pind] then
             ui.show(pind)
@@ -155,22 +121,12 @@ do--[[ on_tick_handler
           end
         end
       end
-      ui.set_table_entires(proc.table_entries)
-      on_event(on_tick_event, nil)
-      proc.state = "idle"
+    else
+      remove_monitored_train(train_id)
     end
+    ui.set_table_entires(proc.table_entries)
   end
-
-  --[[ start_on_tick
-  * starts on_tick_handler every update_interval ticks
-  --]]
-  local function start_on_tick(event)
-    if proc.state == "idle" then
-      proc.state = "init"
-      on_event(on_tick_event, on_tick_handler)
-    end
-  end
-  script.on_nth_tick(update_interval, start_on_tick)
+  script.on_event(defines.events.on_tick, on_tick_handler)
 end
 
 -- initialization and settings
@@ -251,7 +207,7 @@ do
   script.on_init(
     function()
       global.data = {monitored_trains = {}, new_trains = {}, alert_queue = {}}
-      global.proc = {state = "idle", show_on_alert = {}, show_button = {}}
+      global.proc = {table_entries = {}}
       data = global.data
       proc = global.proc
       ui.init()
@@ -266,9 +222,6 @@ do
       data = global.data
       proc = global.proc
       ui.on_load()
-      if proc.state ~= "idle" then
-        on_event(on_tick_event, on_tick_handler)
-      end
       register_ltn_event()
       if debug_log then
         log2("On_load finished.\nDebug data dump follows.\n", data, proc)
