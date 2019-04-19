@@ -14,8 +14,7 @@ local Queue = require("script.queue")
 
 --localize functions and variables
 local update_interval = settings.global["tral-refresh-interval"].value
-local monitor_states, ok_states
-local data
+local data, monitor_states, ok_states
 local pairs = pairs
 local function remove_monitored_train(train_id)
   if data.active_alerts[train_id] then
@@ -131,6 +130,7 @@ end
 
 do  -- on_runtime_mod_setting_changed
   local train_state = defines.train_state
+  local offset = 2
   local function update_timeouts()
     local set = settings.global
     update_interval = set["tral-refresh-interval"].value
@@ -140,25 +140,25 @@ do  -- on_runtime_mod_setting_changed
       [train_state.arrive_station] = true,
     }
     if set["tral-station-timeout"].value >= 0 then
-      monitor_states[train_state.wait_station] = set["tral-station-timeout"].value * 60
+      monitor_states[train_state.wait_station] = set["tral-station-timeout"].value * 60 + offset
     else
       ok_states[train_state.wait_station] = true
     end
     if set["tral-signal-timeout"].value >= 0 then
-      monitor_states[train_state.wait_signal] = set["tral-signal-timeout"].value * 60
+      monitor_states[train_state.wait_signal] = set["tral-signal-timeout"].value * 60 + offset
     else
       ok_states[train_state.wait_signal] = true
     end
     if set["tral-no-path-timeout"].value >= 0 then
-      monitor_states[train_state.no_path] = set["tral-no-path-timeout"].value * 60
-      monitor_states[train_state.path_lost] = set["tral-no-path-timeout"].value * 60
+      monitor_states[train_state.no_path] = set["tral-no-path-timeout"].value * 60 + offset
+      monitor_states[train_state.path_lost] = set["tral-no-path-timeout"].value * 60 + offset
     end
     if set["tral-no-schedule-timeout"].value >= 0 then
-      monitor_states[train_state.no_schedule] = set["tral-no-schedule-timeout"].value * 60
+      monitor_states[train_state.no_schedule] = set["tral-no-schedule-timeout"].value * 60 + offset
     end
     if set["tral-manual-timeout"].value >= 0 then
-      monitor_states[train_state.manual_control] = set["tral-manual-timeout"].value * 60
-      monitor_states[train_state.manual_control_stop] = set["tral-manual-timeout"].value * 60
+      monitor_states[train_state.manual_control] = set["tral-manual-timeout"].value * 60 + offset
+      monitor_states[train_state.manual_control_stop] = set["tral-manual-timeout"].value * 60 + offset
     else
       ok_states[train_state.manual_control] = true
       ok_states[train_state.manual_control_stop] = true
@@ -212,9 +212,40 @@ script.on_event(defines.events.on_player_created,
 )
 
 do -- on_init, on_load, on_configuration_changed
+  local function init_train_states()
+    for _, surface in pairs(game.surfaces) do
+      local trains = surface.get_trains()
+      for _,train in pairs(trains) do
+        local train_id = train.id
+        local state = train.state
+        if monitor_states[state] then
+          if state == defines.train_state.wait_station and
+            data.ltn_stops and
+            monitor_states[defines.train_state.wait_station] then
+            -- dont trigger alert fors trains stopped at LTN depots
+            local stop_id = train.station and train.station.unit_number
+            if stop_id and data.ltn_stops[stop_id] and
+                data.ltn_stops[stop_id].isDepot then
+              break
+            end
+          end -- if new_state == train_state.wait_station ...
+          local alert_time = game.tick + monitor_states[state]
+          alert_time = Queue.insert(data.monitor_queue, alert_time, train_id)
+          data.monitored_trains[train_id] = {
+            state = state,
+            start_time = game.tick,
+            alert_time = alert_time,
+            train = train
+          }
+        end
+      end
+    end
+  end
+
   local function get_ltn_stops(event)
     data.ltn_stops = event.logistic_train_stops
   end
+
   local function register_ltn_event()
     if remote.interfaces["logistic-train-network"] and remote.interfaces["logistic-train-network"].on_stops_updated then
       script.on_event(remote.call("logistic-train-network", "on_stops_updated"), get_ltn_stops)
@@ -236,6 +267,7 @@ do -- on_init, on_load, on_configuration_changed
       if register_ltn_event() then
         data.ltn_stops = {}
       end
+      init_train_states()
       log2("First time initialization finished.\nDebug data dump follows.\n", data)
     end
   )
@@ -258,7 +290,6 @@ do -- on_init, on_load, on_configuration_changed
         data.ltn_stops = nil
       end
       if event.mod_changes["Train_Alerts"] then
-        ui.init()
       end
     end
   )
