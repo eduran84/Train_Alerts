@@ -7,6 +7,9 @@ Date: 2019-04-19
     - Alert window now closes automatically when empty.
     - Right-clicking a train in the list dismisses the alert.
 
+  Bugfixes:
+    - Fixed that setting a timout value to -1 could cause a crash
+
 ---------------------------------------------------------------------------------------------------
 Version: 0.2.4
 Date: 2019-04-16
