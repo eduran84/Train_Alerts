@@ -10,9 +10,11 @@ local frame_name = "tral-frame"
 for pind, player in pairs(game.players) do
   if mg.get_frame_flow(player)["tral-frame"] and mg.get_frame_flow(player)["tral-frame"].valid then
     mg.get_frame_flow(player)["tral-frame"].destroy()
+    log2("Deleting old toggle button.")
   end
   if mg.get_button_flow(player)["tral_toggle_button"] and mg.get_button_flow(player)["tral_toggle_button"].valid then
     mg.get_button_flow(player)["tral_toggle_button"].destroy()
+    log2("Deleting old alert window.")
   end
 end
 
@@ -72,7 +74,7 @@ local function init_train_states()
           end
         end -- if new_state == train_state.wait_station ...
         local alert_time = game.tick + monitor_states[state]
-        alert_time = Queue.insert(data.monitor_queue, alert_time, train_id)
+        alert_time = Queue.insert(data.alert_queue, alert_time, train_id)
         data.monitored_trains[train_id] = {
           state = state,
           start_time = game.tick,
@@ -85,14 +87,22 @@ local function init_train_states()
 end
 
 if global.proc then
+  log2("Invalid data detected in global table. Deleting now.")
   global.proc = nil
   global.data = {
     monitored_trains = {},
-    monitor_queue = {},
-    update_queue = {},
+    alert_queue = Queue.new(),
+    update_queue = Queue.new(),
     active_alerts = {},
   }
   data = global.data
+  update_timeouts() -- call once for initial setup
+  init_train_states()
+  log2("Global table rebuilt. New data:\n", global.data)
+end
+
+if not global.gui or not global.gui[frame_name] then
+  log2("Building GUI data structures.")
   global.gui = {}
   global.gui[frame_name] = {}
   global.gui.show_on_alert = {}
@@ -100,8 +110,6 @@ if global.proc then
   for pind, player in pairs(game.players) do
      global.gui.show_on_alert[pind] = settings.get_player_settings(game.players[pind])["tral-open-on-alert"].value or nil
   end
-  update_timeouts() -- call once for initial setup
-  init_train_states()
 end
 
 

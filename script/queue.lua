@@ -5,25 +5,46 @@
 --]]
 local Queue = {}
 
+function Queue.new()
+  return {array = {}, hash = {}}
+end
+
 function Queue.insert(queue, index, value)
- if queue[index] then
-    index = Queue.find_free_index(queue, index + 1, value)
+ if queue.array[index] then
+    index = Queue.find_free_index(queue.array, index + 1, value)
   end
-  queue[index] = value
+  queue.array[index] = value
+  queue.hash[value] =  index
   return index
 end
 
-function Queue.find_free_index(queue, index, value)
-  if queue[index] then
-    index = Queue.find_free_index(queue, index + 1, value)
+function Queue.find_free_index(array, index, value)
+  if array[index] then
+    index = Queue.find_free_index(array, index + 1, value)
   end
   return index
 end
 
 function Queue.pop(queue, index)
-  local value = queue[index]
-  queue[index] = nil
+  local value = queue.array[index]
+  if value ~= nil then
+    queue.array[index] = nil
+    queue.hash[value] = nil
+  end
   return value
+end
+
+function Queue.get_index(queue, value)
+  return queue.hash[value]
+end
+
+function Queue.remove_value(queue, value)
+  local index = queue.hash[value]
+  if index ~= nil then
+    queue.array[index] = nil
+    queue.hash[value] = nil
+  end
+  return index
 end
 
 return Queue
