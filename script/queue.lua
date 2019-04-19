@@ -9,19 +9,19 @@ function Queue.new()
   return {array = {}, hash = {}}
 end
 
-function Queue.insert(queue, index, value)
- if queue.array[index] then
-    index = Queue.find_free_index(queue.array, index + 1, value)
+local function find_free_index(array, index, value)
+  if array[index] then
+    index = find_free_index(array, index + 1, value)
   end
-  queue.array[index] = value
-  queue.hash[value] =  index
   return index
 end
 
-function Queue.find_free_index(array, index, value)
-  if array[index] then
-    index = Queue.find_free_index(array, index + 1, value)
+function Queue.insert(queue, index, value)
+ if queue.array[index] then
+    index = find_free_index(queue.array, index + 1, value)
   end
+  queue.array[index] = value
+  queue.hash[value] =  index
   return index
 end
 

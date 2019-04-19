@@ -33,15 +33,33 @@ defs.names.controls = {
   toggle_shortcut = "tral-toggle-shortcut",
 }
 
-local sprite_path =  "__Train_Alerts__/graphics/shortcut/"
+defs.names.gui.sprites = {
+  questionmark_white = "tral_icon_questionmark_white",
+  ignore_white = "tral_icon_ignore_white",
+}
+
+defs.names.gui.elements = {
+  main_frame = "tral-frame",
+  main_table = "tral_table",
+  main_pane = "tral-scroll",
+  ignore_button = "tral-ignore-button",
+  help_button = "tral-help-button",
+}
+
+local sprite_path_sc =  "__Train_Alerts__/graphics/shortcut/"
+local sprite_path_icon = "__Train_Alerts__/graphics/icons/"
 defs.spritepath = {
-  ["shortcut_x32"] = sprite_path .. "x32.png",
-  ["shortcut_x32_bw"] = sprite_path .. "x32_bw.png",
-  ["shortcut_x24"] = sprite_path .. "x24.png",
-  ["shortcut_x24_bw"] = sprite_path .. "x24_bw.png",
+  shortcut_x32 = sprite_path_sc .. "x32.png",
+  shortcut_x32_bw = sprite_path_sc .. "x32_bw.png",
+  shortcut_x24 = sprite_path_sc .. "x24.png",
+  shortcut_x24_bw = sprite_path_sc .. "x24_bw.png",
+  questionmark_white = sprite_path_icon .. "questionmark_white.png",
+  ignore_white = sprite_path_icon .. "ignore_white.png",
 }
 
 defs.constants.trains_per_tick = 15
+defs.constants.button_inner_width = {50, 200, 50}
+defs.constants.button_outer_width = 325
 
 defs.dicts.train_state = {
   [defines.train_state.on_the_path] = {"train-states.on_the_path"},

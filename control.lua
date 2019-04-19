@@ -19,9 +19,7 @@ local data, monitor_states, ok_states
 local pairs = pairs
 local train_state_dict = defs.dicts.train_state
 
-
 -- state change helper function
-
 local function stop_monitoring(train_id)
   if data.active_alerts[train_id] then
     ui.delete_row(train_id)
@@ -214,17 +212,25 @@ end
 do  -- on_gui_click
   local open_train_gui = require("__OpteraLib__.script.train").open_train_gui
   local tonumber, match = tonumber, string.match
+  local handler = {
+    [defs.names.gui.elements.ignore_button] = ui.add_to_ignore,
+    [defs.names.gui.elements.help_button] = ui.open_help,
+  }
 
   script.on_event(defines.events.on_gui_click,
     function(event)
       if event.element and event.element.name then
         if debug_log then log2("on_gui_click event received:", event) end
-        local train_id = tonumber(match(event.element.name, "tral_trainbt_(%d+)"))
-        if train_id and data.monitored_trains[train_id] then
-          if event.button == 2 then -- left mouse button
-            open_train_gui(event.player_index, data.monitored_trains[train_id].train)
-          else -- right mouse button
-            stop_monitoring(train_id)
+        if handler[event.element.name] then
+          handler[event.element.name](event)
+        else
+          local train_id = tonumber(match(event.element.name, "tral_trainbt_(%d+)"))
+          if train_id and data.monitored_trains[train_id] then
+            if event.button == 2 then -- left mouse button
+              open_train_gui(event.player_index, data.monitored_trains[train_id].train)
+            else -- right mouse button
+              stop_monitoring(train_id)
+            end
           end
         end
       end

@@ -5,9 +5,10 @@
 --]]
 
 default = data.raw["gui-style"].default
-local WIDTH = {50, 200, 50}
-local TOT_WIDTH = 325
+defs = require("script.defines")
+require("prototypes.sprites")
 
+-- alert button styles
 local function rounded_button_glow(tint_value)
   return
   {
@@ -44,35 +45,42 @@ default["tral_button_row"] = {
   horizontal_align = "left",
   left_padding = 4,
   right_padding = 4,
-  minimal_width = TOT_WIDTH,
-  maximal_width = TOT_WIDTH,
+  minimal_width = defs.constants.button_outer_width,
+  maximal_width = defs.constants.button_outer_width,
   default_graphical_set = rounded_button_graphical_set(0, 0),
   hovered_graphical_set = rounded_button_graphical_set(34, 0, true),
   clicked_graphical_set = rounded_button_graphical_set(51, 0),
   disabled_graphical_set = rounded_button_graphical_set(68, 0),
 }
-
 default["tral_label_id"] = {
   type = "label_style",
   parent = "tooltip_heading_label",
   horizontal_align = "right",
-  minimal_width = WIDTH[1],
-  maximal_width = WIDTH[1],
+  minimal_width = defs.constants.button_inner_width[1],
+  maximal_width = defs.constants.button_inner_width[1],
 }
 default["tral_label_state"] = {
   type = "label_style",
   parent = "tooltip_heading_label",
   horizontal_align = "left",
-  minimal_width = WIDTH[2],
-  maximal_width = WIDTH[2],
+  minimal_width = defs.constants.button_inner_width[2],
+  maximal_width = defs.constants.button_inner_width[2],
 }
 default["tral_label_time"] = {
   type = "label_style",
   parent = "tooltip_heading_label",
   horizontal_align = "right",
-  minimal_width = WIDTH[3],
-  maximal_width = WIDTH[3],
+  minimal_width = defs.constants.button_inner_width[3],
+  maximal_width = defs.constants.button_inner_width[3],
 }
+
+
+default["tral_title_button"] = {
+  type = "button_style",
+  parent = "close_button",
+  size = 24,
+}
+
 
 require("prototypes.eui.shared")
 require("prototypes.eui.frame")

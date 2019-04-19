@@ -8,21 +8,19 @@
 local log2 = require("__OpteraLib__.script.logger").log
 local mod_gui = require("mod-gui")
 local EUI_Frame = require("script.eui.EUI_Frame")
--- constants
-local frame_name = defs.names.gui.main_frame
-local toggle_shortcut_name = defs.names.controls.toggle_shortcut
-local table_name = "tral_table"
-local pane_name = "tral-scroll"
-local WIDTH = {58, 200, 50}
 
 --localize functions and variables
 local pairs = pairs
 local gui
+local names = defs.names
+local element_names = names.gui.elements
+local toggle_shortcut_name = names.controls.toggle_shortcut
+local WIDTH = {58, 200, 50}
 
 -- private UI functions
 local function get_frame(pind)
   local frame_flow = mod_gui.get_frame_flow(game.players[pind])
-  local frame_obj = gui[frame_name][pind]
+  local frame_obj = gui[element_names.main_frame][pind]
   if frame_obj and frame_obj:is_valid() then
     return frame_obj
   else
@@ -35,27 +33,44 @@ local function get_frame(pind)
       style = "tral_transparent_frame",
     }
     frame_obj.frame.style.maximal_height = settings.get_player_settings(game.players[pind])["tral-window-height"].value
+    frame_obj:add_title_button({
+      type = "sprite-button",
+      style = "tral_title_button",
+      sprite = names.gui.sprites.questionmark_white,
+      name = element_names.help_button,
+    })
+    frame_obj:add_title_button({
+      type = "sprite-button",
+      style = "tral_title_button",
+      sprite = names.gui.sprites.ignore_white,
+      name = element_names.ignore_button,
+    })
 
     local tbl = frame_obj:add{type = "table", column_count = 3}
     for i = 1, 3 do
-      local label = tbl.add{type = "label", style = "caption_label", caption = {"tral.col-header-"..i}}
+      local label = tbl.add{
+        type = "label",
+        style = "caption_label",
+        caption = {"tral.col-header-"..i}
+      }
       label.style.width = WIDTH[i]
     end
     frame_obj:add{
       type = "scroll-pane",
       vertical_scroll_policy = "auto",
       horizontal_scroll_policy = "never",
-      name = pane_name
-    }.add{type = "table", name = table_name, column_count = 1}
+      name = element_names.main_pane
+    }.add{type = "table", name = element_names.main_table, column_count = 1}
     frame_obj:hide()
-    gui[frame_name][pind] = frame_obj
+    gui[element_names.main_frame][pind] = frame_obj
     return frame_obj
   end
 end
 
 local function get_table(pind)
   local frame_obj = get_frame(pind)
-  return frame_obj.body[pane_name] and frame_obj.body[pane_name][table_name]
+  return frame_obj.body[element_names.main_pane]
+      and frame_obj.body[element_names.main_pane][element_names.main_table]
 end
 
 local function show(pind)
@@ -66,7 +81,6 @@ local function show(pind)
   )
 end
 
-
 local function hide(pind)
   get_frame(pind):hide()
   game.players[pind].set_shortcut_toggled(toggle_shortcut_name, false)
@@ -76,7 +90,7 @@ end
 commands.add_command("reset", "",
   function(event)
     game.players[event.player_index].gui.left.clear()
-    gui[frame_name] = {}
+    gui[element_names.main_frame] = {}
   end
 )
 
@@ -88,7 +102,7 @@ end
 local function init()
   global.gui = {}
   gui = global.gui
-  global.gui[frame_name] = {}
+  global.gui[element_names.main_frame] = {}
   global.gui.show_on_alert = {}
   global.gui.active_alert_count = 0
   for pind, player in pairs(game.players) do
@@ -98,11 +112,10 @@ end
 
 local function on_load()
   gui = global.gui
-  for pind, frame_obj in pairs(gui[frame_name]) do
+  for pind, frame_obj in pairs(gui[element_names.main_frame]) do
     EUI_Frame.restore_mt(frame_obj)
   end
 end
-
 
 local add_row
 do
@@ -163,7 +176,7 @@ local function update_state(train_id, new_state)
   end
 end
 
-script.on_event("tral-toggle-hotkey",
+script.on_event(names.controls.toggle_hotkey,
   function(event)
     if debug_log then log2("Toggle hotkey pressed. Event data:", event) end
     game.players[event.player_index].set_shortcut_toggled(
@@ -172,6 +185,7 @@ script.on_event("tral-toggle-hotkey",
     )
   end
 )
+
 script.on_event(
   defines.events.on_lua_shortcut,
   function(event)
@@ -184,7 +198,6 @@ script.on_event(
     end
   end
 )
-
 
 return {
   init = init,
