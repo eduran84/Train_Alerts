@@ -19,7 +19,7 @@ for pind, player in pairs(game.players) do
 end
 
 -- Wipe old data structure and rebuild
-local Queue = require("script.Queue")
+local Queue = require("script.queue")
 local data, monitor_states, ok_states
 local train_state = defines.train_state
 local offset = 2
