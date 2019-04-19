@@ -10,6 +10,7 @@ print = require("__OpteraLib__.script.logger").print
 debug_log = settings.global["tral-debug-level"].value
 defs = require("script.defines")
 local ui = require("script.gui_alert_window")
+local ui_settings = require("script.gui_settings_window")
 local Queue = require("script.queue")
 
 --localize functions and variables
@@ -213,8 +214,9 @@ do  -- on_gui_click
   local open_train_gui = require("__OpteraLib__.script.train").open_train_gui
   local tonumber, match = tonumber, string.match
   local handler = {
-    [defs.names.gui.elements.ignore_button] = ui.add_to_ignore,
-    [defs.names.gui.elements.help_button] = ui.open_help,
+    [defs.names.gui.elements.ignore_button] = ui_settings.open,
+    [defs.names.gui.elements.help_button] = nil,
+    [defs.names.gui.elements.close_button] = ui_settings.close,
   }
 
   script.on_event(defines.events.on_gui_click,
@@ -297,7 +299,9 @@ do -- on_init, on_load, on_configuration_changed
         active_alerts = {},
       }
       data = global.data
+      global.gui = {}
       ui.init()
+      ui_settings.init()
       if register_ltn_event() then
         data.ltn_stops = {}
       end
@@ -309,6 +313,7 @@ do -- on_init, on_load, on_configuration_changed
     function()
       data = global.data  -- localize data table
       ui.on_load()  -- localize ui tables
+      ui_settings.on_load()
       register_ltn_event()
     end
   )

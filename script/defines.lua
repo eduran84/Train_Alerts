@@ -44,6 +44,9 @@ defs.names.gui.elements = {
   main_pane = "tral-scroll",
   ignore_button = "tral-ignore-button",
   help_button = "tral-help-button",
+
+  setting_frame = "tral-settings-frame",
+  close_button = "tral-close-settings-button",
 }
 
 local sprite_path_sc =  "__Train_Alerts__/graphics/shortcut/"

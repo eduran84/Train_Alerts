@@ -5,17 +5,16 @@
 --]]
 
 -- load modules
-local log2 = require("__OpteraLib__.script.logger").log
 local mod_gui = require("mod-gui")
 local EUI_Frame = require("script.eui.EUI_Frame")
 
 --localize functions and variables
-local pairs = pairs
+local pairs, log2 = pairs, log2
 local gui
 local names = defs.names
 local element_names = names.gui.elements
 local toggle_shortcut_name = names.controls.toggle_shortcut
-local WIDTH = {58, 200, 50}
+local WIDTH = defs.constants.button_inner_width
 
 -- private UI functions
 local function get_frame(pind)
@@ -36,12 +35,14 @@ local function get_frame(pind)
     frame_obj:add_title_button({
       type = "sprite-button",
       style = "tral_title_button",
+      tooltip = {"tral.help-button-tt"},
       sprite = names.gui.sprites.questionmark_white,
       name = element_names.help_button,
     })
     frame_obj:add_title_button({
       type = "sprite-button",
       style = "tral_title_button",
+      tooltip = {"tral.ignore-button-tt"},
       sprite = names.gui.sprites.ignore_white,
       name = element_names.ignore_button,
     })
@@ -100,7 +101,6 @@ local function player_init(pind)
 end
 
 local function init()
-  global.gui = {}
   gui = global.gui
   global.gui[element_names.main_frame] = {}
   global.gui.show_on_alert = {}
