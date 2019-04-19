@@ -10,6 +10,7 @@ local mod_gui = require("mod-gui")
 local EUI_Frame = require("script.eui.EUI_Frame")
 -- constants
 local frame_name = defs.names.gui.main_frame
+local toggle_shortcut_name = defs.names.controls.toggle_shortcut
 local table_name = "tral_table"
 local pane_name = "tral-scroll"
 local WIDTH = {58, 200, 50}
@@ -57,6 +58,20 @@ local function get_table(pind)
   return frame_obj.body[pane_name] and frame_obj.body[pane_name][table_name]
 end
 
+local function show(pind)
+  get_frame(pind):show()
+  game.players[pind].set_shortcut_toggled(
+    toggle_shortcut_name,
+    true
+  )
+end
+
+
+local function hide(pind)
+  get_frame(pind):hide()
+  game.players[pind].set_shortcut_toggled(toggle_shortcut_name, false)
+end
+
 -- for debugging, to simulate UI elements becoming invalid
 commands.add_command("reset", "",
   function(event)
@@ -88,45 +103,40 @@ local function on_load()
   end
 end
 
-local add_row, delete_row, update_time, update_state
 
-local toggle_shortcut_name = defs.names.controls.toggle_shortcut
-local tostring = tostring
-local button_definition = {
-  type = "button",
-  style = "tral_button_row",
-  name = "tral_trainbt_",
-  tooltip = {"tral.button-tooltip"},
-}
-local label_definitions = {
-  [1] = {type = "label", style = "tral_label_id"},
-  [2] = {type = "label", style = "tral_label_state"},
-  [3] = {type = "label", style = "tral_label_time"}
-}
-local flow_definition = {type = "flow", ignored_by_interaction = true}
+local add_row
+do
+  local tostring = tostring
+  local button_definition = {
+    type = "button",
+    style = "tral_button_row",
+    name = "tral_trainbt_",
+    tooltip = {"tral.button-tooltip"},
+  }
+  local label_definitions = {
+    [1] = {type = "label", style = "tral_label_id"},
+    [2] = {type = "label", style = "tral_label_state"},
+    [3] = {type = "label", style = "tral_label_time"}
+  }
+  local flow_definition = {type = "flow", ignored_by_interaction = true}
 
-add_row = function(train_id, state, time)
-  button_definition.name = "tral_trainbt_" .. train_id
-  label_definitions[1].caption = tostring(train_id)
-  label_definitions[2].caption = state
-  label_definitions[3].caption = time
-  gui.active_alert_count = gui.active_alert_count + 1
-  for pind in pairs(game.players) do
-    local button = get_table(pind).add(button_definition).add(flow_definition)
-    for i = 1, 3 do
-      button.add(label_definitions[i])
-    end
-    if gui.show_on_alert[pind] then
-      get_frame(pind):show()
-      game.players[pind].set_shortcut_toggled(
-        toggle_shortcut_name,
-        true
-      )
+  add_row = function(train_id, state, time)
+    button_definition.name = "tral_trainbt_" .. train_id
+    label_definitions[1].caption = tostring(train_id)
+    label_definitions[2].caption = state
+    label_definitions[3].caption = time
+    gui.active_alert_count = gui.active_alert_count + 1
+    for pind in pairs(game.players) do
+      local button = get_table(pind).add(button_definition).add(flow_definition)
+      for i = 1, 3 do
+        button.add(label_definitions[i])
+      end
+      if gui.show_on_alert[pind] then show(pind) end
     end
   end
 end
 
-delete_row = function(train_id)
+local function delete_row(train_id)
   gui.active_alert_count = gui.active_alert_count - 1
   for pind in pairs(game.players) do
     local button = get_table(pind)["tral_trainbt_" .. train_id]
@@ -134,32 +144,30 @@ delete_row = function(train_id)
       button.destroy()
     end
     if gui.active_alert_count == 0 and gui.show_on_alert[pind] then
-      get_frame(pind):hide()
-      game.players[pind].set_shortcut_toggled(toggle_shortcut_name, false)
+      hide(pind)
     end
   end
 end
 
-update_time = function(train_id, new_time)
+local function update_time(train_id, new_time)
   for pind in pairs(game.players) do
     local button = get_table(pind)["tral_trainbt_" .. train_id]
     button.children[1].children[3].caption = new_time
   end
 end
 
-update_state = function(train_id, new_state)
+local function update_state(train_id, new_state)
   for pind in pairs(game.players) do
     local button = get_table(pind)["tral_trainbt_" .. train_id]
     button.children[1].children[2].caption = new_state
   end
 end
 
-
 script.on_event("tral-toggle-hotkey",
   function(event)
     if debug_log then log2("Toggle hotkey pressed. Event data:", event) end
     game.players[event.player_index].set_shortcut_toggled(
-      defs.names.controls.toggle_shortcut,
+      toggle_shortcut_name,
       get_frame(event.player_index):toggle()
     )
   end
@@ -170,7 +178,7 @@ script.on_event(
     if debug_log then log2("Toggle shortcut pressed. Event data:", event) end
     if event.prototype_name == defs.names.controls.toggle_shortcut then
       game.players[event.player_index].set_shortcut_toggled(
-        defs.names.controls.toggle_shortcut,
+        toggle_shortcut_name,
         get_frame(event.player_index):toggle()
       )
     end
