@@ -5,6 +5,7 @@ function Queue.insert(queue, index, value)
     index = Queue.find_free_index(queue, index + 1, value)
   end
   queue[index] = value
+  log2("queue insert", index, value, queue)
   return index
 end
 
@@ -18,6 +19,7 @@ end
 function Queue.pop(queue, index)
   local value = queue[index]
   queue[index] = nil
+  log2("queue pop", index, value)
   return value
 end
 

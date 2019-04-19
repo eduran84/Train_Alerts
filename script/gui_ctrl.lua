@@ -59,7 +59,7 @@ end
 
 local function get_table(pind)
   local frame_obj = get_frame(pind)
-  return frame_obj:is_visible() and frame_obj.body[pane_name] and frame_obj.body[pane_name][table_name]
+  return frame_obj.body[pane_name] and frame_obj.body[pane_name][table_name]
 end
 
 -- for debugging, to simulate UI elements becoming invalid
@@ -98,6 +98,16 @@ end
 local function set_alert_state(state, pind)
   local style = state and (not get_frame(pind).frame.visible) and "tral_toggle_button_with_alert" or "mod_gui_button"
   get_button(pind).style = style
+end
+
+local function add_row(row)
+  for pind in pairs(game.players) do
+    local tbl = get_table(pind)
+    local elem = tbl.add(row.button).add{type = "flow", ignored_by_interaction = true}
+    for i = 1, 3 do
+      elem.add(row.label[i])
+    end
+  end
 end
 
 local function set_table_entires(entries)
@@ -156,6 +166,7 @@ return {
   on_load = on_load,
   player_init = player_init,
   show = show,
+  add_row = add_row,
   set_alert_state = set_alert_state,
   set_table_entires = set_table_entires,
   }

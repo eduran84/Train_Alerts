@@ -22,7 +22,7 @@ local function remove_monitored_train(train_id)
   local traindata = data.monitored_trains[train_id]
   proc.table_entries[train_id] = nil
   data.alert_queue[traindata.alert_time or 0] = nil
-  traindata = nil
+  data.monitored_trains[train_id] = nil
 end
 
 do
@@ -113,6 +113,7 @@ do--[[ on_tick_handler
       table_entries[train_id].label[3] = {type = "label", style = "tral_label_time", caption = ticks_to_timestring(event.tick - train_data.start_time)}
       if not train_data.alert_triggered then
         train_data.alert_triggered = true
+        ui.add_row(table_entries[train_id])
         for pind in pairs(game.players) do
           if global.gui.show_on_alert[pind] then
             ui.show(pind)
@@ -124,7 +125,6 @@ do--[[ on_tick_handler
     else
       remove_monitored_train(train_id)
     end
-    ui.set_table_entires(proc.table_entries)
   end
   script.on_event(defines.events.on_tick, on_tick_handler)
 end
