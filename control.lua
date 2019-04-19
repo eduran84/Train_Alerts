@@ -9,7 +9,7 @@ log2 = require("__OpteraLib__.script.logger").log
 print = require("__OpteraLib__.script.logger").print
 debug_log = settings.global["tral-debug-level"].value
 defs = require("script.defines")
-local ui = require("script.gui_ctrl")
+local ui = require("script.gui_alert_window")
 local Queue = require("script.queue")
 
 --localize functions and variables
