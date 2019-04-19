@@ -44,6 +44,7 @@ function methods.hide(o)
 end
 function methods.toggle(o)
   o.frame.visible = not o.frame.visible
+  return o.frame.visible
 end
 function methods.is_visible(o)
   return o.frame.visible

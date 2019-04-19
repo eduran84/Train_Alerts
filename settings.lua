@@ -1,11 +1,4 @@
 data:extend({
-	{
-		name = "tral-show-button",
-		setting_type = "runtime-per-user",
-		type = "bool-setting",
-		default_value = true,
-    order = "a"
-	},
   {
 		name = "tral-open-on-alert",
 		setting_type = "runtime-per-user",

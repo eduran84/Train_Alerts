@@ -1,7 +1,11 @@
 local defs = {
-  names = {gui = {}},
+  names = {
+    controls = {},
+    gui = {}
+  },
   dicts = {},
   constants = {},
+  spritepath = {},
 }
 
 -- EUI names
@@ -9,7 +13,7 @@ defs.names.gui.shared = {
   vertical_spacer = "eui-shr/vertical-spacer",
   horizontal_spacer = "eui-shr/horizontal-spacer",
 }
-
+--[[
 defs.names.gui.table = {
   outer_flow = "eui-tbl/outer-flow",
   header_frame = "eui-tbl/header-frame",
@@ -17,11 +21,26 @@ defs.names.gui.table = {
   pane = "eui-tbl/pane",
   table = "eui-tbl/table",
 }
-
+--]]
 defs.names.gui.frame = {
   outer_frame = "eui-frm/outer_frame",
   title_flow = "eui-frm/header_flow",
   title = "eui-frm/title",
+}
+
+defs.names.controls = {
+  toggle_hotkey = "tral-toggle-hotkey",
+  left_mouse = 2,
+  right_mouse = 4,
+  toggle_shortcut = "tral-toggle-shortcut",
+}
+
+local sprite_path =  "__Train_Alerts__/graphics/shortcut/"
+defs.spritepath = {
+  ["shortcut_x32"] = sprite_path .. "x32.png",
+  ["shortcut_x32_bw"] = sprite_path .. "x32_bw.png",
+  ["shortcut_x24"] = sprite_path .. "x24.png",
+  ["shortcut_x24_bw"] = sprite_path .. "x24_bw.png",
 }
 
 defs.constants.trains_per_tick = 15

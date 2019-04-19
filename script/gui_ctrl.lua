@@ -9,7 +9,7 @@ local pane_name = "tral-scroll"
 local WIDTH = {58, 200, 50}
 
 --localize functions and variables
-local pairs, match = pairs, string.match
+local pairs = pairs
 local gui
 
 -- private UI functions
@@ -84,6 +84,7 @@ end
 
 local add_row, delete_row, update_row
 do
+  local toggle_shortcut_name = defs.names.controls.toggle_shortcut
   local tostring = tostring
   local button_definition = {
     type = "button",
@@ -111,6 +112,10 @@ do
       end
       if gui.show_on_alert[pind] then
         get_frame(pind):show()
+        game.players[pind].set_shortcut_toggled(
+          toggle_shortcut_name,
+          true
+        )
       end
     end
   end
@@ -124,6 +129,7 @@ do
       end
       if gui.active_alert_count == 0 and gui.show_on_alert[pind] then
         get_frame(pind):hide()
+        game.players[pind].set_shortcut_toggled(toggle_shortcut_name, false)
       end
     end
   end
@@ -134,29 +140,31 @@ do
       button.children[1].children[3].caption = new_time
     end
   end
-end
 
--- event handlers
-do
-  local open_train_gui = require("__OpteraLib__.script.train").open_train_gui
-  local function on_click_handler(event)
-    if event.element and event.element.name then
-      if debug_log then log2("on_gui_click event received:", event) end
-      local train_id = tonumber(match(event.element.name, "tral_trainbt_(%d+)"))
-      if train_id and global.data.monitored_trains[train_id] then
-        open_train_gui(event.player_index, global.data.monitored_trains[train_id].train)
+  script.on_event("tral-toggle-hotkey",
+    function(event)
+      if debug_log then log2("Toggle hotkey pressed. Event data:", event) end
+      game.players[event.player_index].set_shortcut_toggled(
+        defs.names.controls.toggle_shortcut,
+        get_frame(event.player_index):toggle()
+      )
+    end
+  )
+  script.on_event(
+    defines.events.on_lua_shortcut,
+    function(event)
+      if debug_log then log2("Toggle shortcut pressed. Event data:", event) end
+      if event.prototype_name == defs.names.controls.toggle_shortcut then
+        game.players[event.player_index].set_shortcut_toggled(
+          defs.names.controls.toggle_shortcut,
+          get_frame(event.player_index):toggle()
+        )
       end
     end
-  end
-  script.on_event(defines.events.on_gui_click, on_click_handler)
+  )
 end
 
-script.on_event("tral-toggle-hotkey",
-  function(event)
-    if debug_log then log2("Toggle hotkey pressed. Event data:", event) end
-    get_frame(event.player_index):toggle()
-  end
-)
+
 return {
   init = init,
   on_load = on_load,

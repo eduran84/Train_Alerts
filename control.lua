@@ -2,19 +2,15 @@
 log2 = require("__OpteraLib__.script.logger").log
 print = require("__OpteraLib__.script.logger").print
 debug_log = settings.global["tral-debug-level"].value
-local defs = require("script.defines")
+defs = require("script.defines")
 local ui = require("script.gui_ctrl")
 local Queue = require("script.queue")
 
--- set parameters and dictionaries
+--localize functions and variables
 local update_interval = settings.global["tral-refresh-interval"].value
 local monitor_states, ok_states
-
--- localize variables
 local data
-
---localize functions
-local next, pairs, format, tostring = next, pairs, string.format, tostring
+local pairs = pairs
 local function remove_monitored_train(train_id)
   if data.active_alerts[train_id] then
     ui.delete_row(train_id)
@@ -79,6 +75,8 @@ end
 do--[[ on_tick_handler
   * checks monitor_queue for a train
   * if one exists, the train is added to the alert UI
+  * checks update_queue for a train
+  * if one exists, displayed time for that train is updated
   --]]
 
   local trains_per_tick = defs.constants.trains_per_tick
@@ -177,6 +175,27 @@ do  -- on_runtime_mod_setting_changed
     end
   end
   script.on_event(defines.events.on_runtime_mod_setting_changed, on_settings_changed_handler)
+end
+
+do  -- on_gui_click
+  local open_train_gui = require("__OpteraLib__.script.train").open_train_gui
+  local tonumber, match = tonumber, string.match
+
+  script.on_event(defines.events.on_gui_click,
+    function(event)
+      if event.element and event.element.name then
+        if debug_log then log2("on_gui_click event received:", event) end
+        local train_id = tonumber(match(event.element.name, "tral_trainbt_(%d+)"))
+        if train_id and data.monitored_trains[train_id] then
+          if event.button == 2 then -- left mouse button
+            open_train_gui(event.player_index, data.monitored_trains[train_id].train)
+          else -- right mouse button
+            remove_monitored_train(train_id)
+          end
+        end
+      end
+    end
+    )
 end
 
 script.on_event(defines.events.on_player_created,
