@@ -1,0 +1,1 @@
+global.gui[defs.names.gui.elements.setting_frame] = {}

@@ -21,6 +21,7 @@ local function get_frame(pind)
     if frame_obj then frame_obj:destroy() end
     frame_obj = EUI_Frame.build{
       parent = frame_flow,
+      name = element_names.setting_frame,
       caption = {"tral.setting-frame-caption"},
       direction = "vertical",
     }
@@ -37,7 +38,7 @@ local function get_frame(pind)
       local label = tbl.add{
         type = "label",
         style = "caption_label",
-        caption = {"tral.col-header-"..i}
+        caption = {"tral.settings-col-header-"..i}
       }
     end
     frame_obj:add{
@@ -74,14 +75,22 @@ local function on_load()
 end
 
 local function open(event)
-  local pind = event.player_index
-  get_frame(pind):show()
+  local frame_obj = get_frame(event.player_index)
+  frame_obj:show()
+  game.players[event.player_index].opened = frame_obj.frame
 end
 
 local function close(event)
-  local pind = event.player_index
-  get_frame(pind):hide()
+  get_frame(event.player_index):hide()
 end
+
+script.on_event(defines.events.on_gui_closed,
+  function(event)
+    if event.element and event.element.name == element_names.setting_frame then
+      close(event)
+    end
+  end
+)
 
 return {
   init = init,

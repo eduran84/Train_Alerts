@@ -15,10 +15,19 @@ function EUI_Frame.build(args)
   local new_frame = {}
   local parent = args.parent
 
-  local frame = parent.add{type = "frame", style = args.style or sty.outer_frame}
+  local frame = parent.add{
+    type = "frame",
+    style = args.style or sty.outer_frame,
+    name = args.name,
+  }
   local outer_flow = frame.add{type = "flow", direction = "vertical"}
   local title_flow = outer_flow.add{type = "flow", style = sty.title_flow}
-  title_flow.add{type = "label", style = sty.title, caption = args.caption, tooltip = args.tooltip}
+  title_flow.add{
+    type = "label",
+    style = sty.title,
+    caption = args.caption,
+    tooltip = args.tooltip
+  }
   title_flow.add{type = "flow", style = sty_shared.horizontal_spacer}
 
   new_frame.frame = frame
