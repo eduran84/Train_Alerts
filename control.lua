@@ -1,5 +1,6 @@
 -- load modules
 log2 = require("__OpteraLib__.script.logger").log
+print = require("__OpteraLib__.script.logger").print
 debug_log = settings.global["tral-debug-level"].value
 local defs = require("script.defines")
 local ui = require("script.gui_ctrl")
@@ -160,7 +161,7 @@ do  -- on_runtime_mod_setting_changed
       if event.setting == "tral-open-on-alert" then
         global.gui.show_on_alert[event.player_index] = settings.get_player_settings(player)["tral-open-on-alert"].value or nil
       end
-      if event.setting == "tral-show-button" or event.setting == "tral-window-height" then
+      if event.setting == "tral-window-height" then
         ui.player_init(event.player_index)
       end
       log2("Mod settings changed by player", player.name, ".\nSetting changed event:", event, "\nUpdated state dicts:", monitor_states, ok_states)
@@ -168,7 +169,6 @@ do  -- on_runtime_mod_setting_changed
   end
   script.on_event(defines.events.on_runtime_mod_setting_changed, on_settings_changed_handler)
 end
-
 
 script.on_event(defines.events.on_player_created,
   function(event)

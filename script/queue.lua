@@ -19,7 +19,7 @@ end
 function Queue.pop(queue, index)
   local value = queue[index]
   queue[index] = nil
-  log2("queue pop", index, value)
+  --log2("queue pop", index, value)
   return value
 end
 

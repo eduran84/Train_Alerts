@@ -6,25 +6,13 @@ local EUI_Frame = require("script.eui.EUI_Frame")
 local frame_name = "tral-frame"
 local table_name = "tral_table"
 local pane_name = "tral-scroll"
-local button_name = "tral_toggle_button"
 local WIDTH = {58, 200, 50}
 
 --localize functions and variables
-local pairs, match, tonumber = pairs, string.match, tonumber
+local pairs, match = pairs, string.match
 local gui
 
 -- private UI functions
-local function get_button(pind)
-  local button_flow = mod_gui.get_button_flow(game.players[pind])
-
-  if button_flow[button_name] and button_flow[button_name].valid then
-    return button_flow[button_name]
-  else
-    local button = button_flow.add{type = "sprite-button", style = "mod_gui_button", name = button_name, sprite = "tral_sprite_loco"}
-    return button
-  end
-end
-
 local function get_frame(pind)
   local frame_flow = mod_gui.get_frame_flow(game.players[pind])
   local frame_obj = gui[frame_name][pind]
@@ -73,22 +61,18 @@ commands.add_command("reset", "",
 
 -- public functions
 local function player_init(pind)
-  local player = game.players[pind]
-  gui.show_on_alert[pind] =  settings.get_player_settings(player)["tral-open-on-alert"].value or nil
-  gui.show_button[pind] = settings.get_player_settings(player)["tral-show-button"].value
-  get_button(pind).visible =  gui.show_button[pind]
+  gui.show_on_alert[pind] = settings.get_player_settings(game.players[pind])["tral-open-on-alert"].value or nil
 end
 
 local function init()
   global.gui = {}
+  gui = global.gui
   global.gui[frame_name] = {}
   global.gui.show_on_alert = {}
-  global.gui.show_button = {}
   global.gui.active_alert_count = 0
   for pind, player in pairs(game.players) do
     player_init(pind)
   end
-  gui = global.gui
 end
 
 local function on_load()
@@ -96,11 +80,6 @@ local function on_load()
   for pind, frame_obj in pairs(gui[frame_name]) do
     EUI_Frame.restore_mt(frame_obj)
   end
-end
-
-local function set_alert_state(state, pind)
-  local style = state and (not get_frame(pind).frame.visible) and "tral_toggle_button_with_alert" or "mod_gui_button"
-  get_button(pind).style = style
 end
 
 local add_row, delete_row
@@ -125,6 +104,7 @@ do
     label_definitions[2].caption = state
     label_definitions[3].caption = time
     gui.active_alert_count = gui.active_alert_count + 1
+    print("adding row:", gui.show_on_alert)
     for pind in pairs(game.players) do
       local button = get_table(pind).add(button_definition).add(flow_definition)
       for i = 1, 3 do
@@ -132,8 +112,6 @@ do
       end
       if gui.show_on_alert[pind] then
         get_frame(pind):show()
-      else
-        set_alert_state(true, pind)
       end
     end
   end
@@ -145,11 +123,12 @@ do
       if button and button.valid then
         button.destroy()
       end
-      _ = gui.active_alert_count == 0 and get_frame(pind):hide()
+      if gui.active_alert_count == 0 and gui.show_on_alert[pind] then
+        get_frame(pind):hide()
+      end
     end
   end
 end
-
 
 -- event handlers
 do
@@ -157,30 +136,21 @@ do
   local function on_click_handler(event)
     if event.element and event.element.name then
       if debug_log then log2("on_gui_click event received:", event) end
-      local name = event.element.name
-      local pind = event.player_index
-      if name == button_name then
-        get_frame(pind):toggle()
-        set_alert_state(false, pind)
-      else
-        local train_id = tonumber(match(name, "tral_trainbt_(%d+)"))
-        if train_id and global.data.monitored_trains[train_id] then
-          open_train_gui(pind, global.data.monitored_trains[train_id].train)
-        end
+      local train_id = tonumber(match(event.element.name, "tral_trainbt_(%d+)"))
+      if train_id and global.data.monitored_trains[train_id] then
+        open_train_gui(event.player_index, global.data.monitored_trains[train_id].train)
       end
     end
   end
   script.on_event(defines.events.on_gui_click, on_click_handler)
 end
 
---local toggle_key_handler = require("script.eui.EUI_Main")
 script.on_event("tral-toggle-hotkey",
   function(event)
     if debug_log then log2("Toggle hotkey pressed. Event data:", event) end
     get_frame(event.player_index):toggle()
   end
 )
-
 return {
   init = init,
   on_load = on_load,
