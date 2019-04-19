@@ -7,7 +7,7 @@ local ui = require("script.gui_ctrl")
 local Queue = require("script.queue")
 
 -- set parameters and dictionaries
-local update_interval = settings.global["tral-refresh-interval"]
+local update_interval = settings.global["tral-refresh-interval"].value
 local monitor_states, ok_states
 
 -- localize variables
@@ -16,16 +16,15 @@ local data
 --localize functions
 local next, pairs, format, tostring = next, pairs, string.format, tostring
 local function remove_monitored_train(train_id)
-  local train_data = data.monitored_trains[train_id]
-  if train_data.alert_triggered then
+  if data.active_alerts[train_id] then
     ui.delete_row(train_id)
+    data.active_alerts[train_id] = nil
   end
-  data.alert_queue[train_data.alert_time or 0] = nil
+  data.monitor_queue[data.monitored_trains[train_id].alert_time or 0] = nil
   data.monitored_trains[train_id] = nil
 end
 
-do
-  --[[ on_state_change
+do--[[ on_state_change
   * triggered on_train_changed_state
   * adds trains with potential alert states to data.monitored_trains
   * removes trains from data.monitored_trains when alert state clears
@@ -61,7 +60,7 @@ do
         end
       end -- if new_state == train_state.wait_station ...
       local alert_time = game.tick + monitor_states[new_state]
-      alert_time = Queue.insert(data.alert_queue, alert_time, train_id)
+      alert_time = Queue.insert(data.monitor_queue, alert_time, train_id)
       data.monitored_trains[train_id] = {
         state = new_state,
         start_time = game.tick,
@@ -77,9 +76,8 @@ do
   script.on_event(defines.events.on_train_changed_state, on_state_change)
 end
 
-local on_tick_handler
 do--[[ on_tick_handler
-  * checks alert_queue for a train
+  * checks monitor_queue for a train
   * if one exists, the train is added to the alert UI
   --]]
 
@@ -95,32 +93,43 @@ do--[[ on_tick_handler
     }
   end
 
-  on_tick_handler = function(event)
-    local train_id = Queue.pop(data.alert_queue, event.tick)
-    if not train_id then return end
-    local train_data = data.monitored_trains[train_id]
-    if train_data.train.valid then
-      if not train_data.alert_triggered then
-        train_data.alert_triggered = true
+  local function on_tick_handler(event)
+    -- add train to alert
+    local train_id = Queue.pop(data.monitor_queue, event.tick)
+    if train_id then
+      local train_data = data.monitored_trains[train_id]
+      if train_data.train.valid then
+        data.active_alerts[train_id] = true
+        Queue.insert(data.update_queue, event.tick + update_interval, train_id)
         ui.add_row(
           train_id,
           train_state_dict[train_data.state],
           ticks_to_timestring(event.tick - train_data.start_time)
         )
+      else
+        remove_monitored_train(train_id)
       end
-    else
-      remove_monitored_train(train_id)
+    end
+
+    -- update time for active alerts
+    train_id = Queue.pop(data.update_queue, event.tick)
+    if train_id then
+      local train_data = data.monitored_trains[train_id]
+      if train_data and train_data.train.valid then
+        ui.update_row(train_id, ticks_to_timestring(event.tick - train_data.start_time))
+        Queue.insert(data.update_queue, event.tick + update_interval, train_id)
+      end
     end
   end
+
   script.on_event(defines.events.on_tick, on_tick_handler)
 end
-
 
 do  -- on_runtime_mod_setting_changed
   local train_state = defines.train_state
   local function update_timeouts()
     local set = settings.global
-    update_interval = set["tral-refresh-interval"]
+    update_interval = set["tral-refresh-interval"].value
     monitor_states = {}
     ok_states = {
       [train_state.on_the_path] = true,
@@ -191,7 +200,12 @@ do -- on_init, on_load, on_configuration_changed
 
   script.on_init(
     function()
-      global.data = {monitored_trains = {}, new_trains = {}, alert_queue = {}}
+      global.data = {
+        monitored_trains = {},
+        monitor_queue = {},
+        update_queue = {},
+        active_alerts = {},
+      }
       data = global.data
       ui.init()
       if register_ltn_event() then

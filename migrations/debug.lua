@@ -6,7 +6,10 @@ global.gui.show_on_alert[1] = true
 global.gui.show_button = nil
 global.gui.active_alert_count = 0
 
-global.data.alert_queue = {}
+global.data.monitor_queue = {}
+global.data.update_queue = {}
+global.data.active_alerts = {}
+global.data.new_trains = nil
 global.proc = nil
 
 local mg = require("mod-gui")

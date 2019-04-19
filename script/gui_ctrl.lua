@@ -82,7 +82,7 @@ local function on_load()
   end
 end
 
-local add_row, delete_row
+local add_row, delete_row, update_row
 do
   local tostring = tostring
   local button_definition = {
@@ -104,7 +104,6 @@ do
     label_definitions[2].caption = state
     label_definitions[3].caption = time
     gui.active_alert_count = gui.active_alert_count + 1
-    print("adding row:", gui.show_on_alert)
     for pind in pairs(game.players) do
       local button = get_table(pind).add(button_definition).add(flow_definition)
       for i = 1, 3 do
@@ -126,6 +125,13 @@ do
       if gui.active_alert_count == 0 and gui.show_on_alert[pind] then
         get_frame(pind):hide()
       end
+    end
+  end
+
+  update_row = function(train_id, new_time)
+    for pind in pairs(game.players) do
+      local button = get_table(pind)["tral_trainbt_" .. train_id]
+      button.children[1].children[3].caption = new_time
     end
   end
 end
@@ -157,4 +163,5 @@ return {
   player_init = player_init,
   add_row = add_row,
   delete_row = delete_row,
+  update_row = update_row,
 }
