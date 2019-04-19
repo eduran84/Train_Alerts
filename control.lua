@@ -10,18 +10,16 @@ local update_interval = settings.global["tral-refresh-interval"]
 local monitor_states, ok_states
 
 -- localize variables
-local data, proc
+local data
 
 --localize functions
 local next, pairs, format, tostring = next, pairs, string.format, tostring
-local ticks_to_timestring
-do
-  ticks_to_timestring = require("__OpteraLib__.script.misc").ticks_to_timestring
-end
 local function remove_monitored_train(train_id)
-  local traindata = data.monitored_trains[train_id]
-  proc.table_entries[train_id] = nil
-  data.alert_queue[traindata.alert_time or 0] = nil
+  local train_data = data.monitored_trains[train_id]
+  if train_data.alert_triggered then
+    ui.delete_row(train_id)
+  end
+  data.alert_queue[train_data.alert_time or 0] = nil
   data.monitored_trains[train_id] = nil
 end
 
@@ -80,18 +78,13 @@ end
 
 local on_tick_handler
 do--[[ on_tick_handler
-  * after being started by start_on_tick function, this runs on every
-    tick until all monitored trains are processed
-  * states:
-      idle:    not running
-      init:    resetting data
-      process: check monitored trains against timeout values
-               create UI entries for train which are timed out
-      update:  update visible UIs with new data
+  * checks alert_queue for a train
+  * if one exists, the train is added to the alert UI
   --]]
 
   local trains_per_tick = defs.constants.trains_per_tick
   local train_state_dict = defs.dicts.train_state
+  local ticks_to_timestring = require("__OpteraLib__.script.misc").ticks_to_timestring
   local function button_params(id)
     return {
       type = "button",
@@ -103,24 +96,16 @@ do--[[ on_tick_handler
 
   on_tick_handler = function(event)
     local train_id = Queue.pop(data.alert_queue, event.tick)
-    local table_entries = proc.table_entries
     if not train_id then return end
     local train_data = data.monitored_trains[train_id]
     if train_data.train.valid then
-      table_entries[train_id] = {button = button_params(train_id)}
-      table_entries[train_id].label = {[1] = {type = "label", style = "tral_label_id", caption = tostring(train_id)}}
-      table_entries[train_id].label[2] = {type = "label", style = "tral_label_state", caption = train_state_dict[train_data.state]}
-      table_entries[train_id].label[3] = {type = "label", style = "tral_label_time", caption = ticks_to_timestring(event.tick - train_data.start_time)}
       if not train_data.alert_triggered then
         train_data.alert_triggered = true
-        ui.add_row(table_entries[train_id])
-        for pind in pairs(game.players) do
-          if global.gui.show_on_alert[pind] then
-            ui.show(pind)
-          else
-            ui.set_alert_state(true, pind)
-          end
-        end
+        ui.add_row(
+          train_id,
+          train_state_dict[train_data.state],
+          ticks_to_timestring(event.tick - train_data.start_time)
+        )
       end
     else
       remove_monitored_train(train_id)
@@ -129,8 +114,8 @@ do--[[ on_tick_handler
   script.on_event(defines.events.on_tick, on_tick_handler)
 end
 
--- initialization and settings
-do
+
+do  -- on_runtime_mod_setting_changed
   local train_state = defines.train_state
   local function update_timeouts()
     local set = settings.global
@@ -192,7 +177,7 @@ script.on_event(defines.events.on_player_created,
   end
 )
 
-do
+do -- on_init, on_load, on_configuration_changed
   local function get_ltn_stops(event)
     data.ltn_stops = event.logistic_train_stops
   end
@@ -207,31 +192,25 @@ do
   script.on_init(
     function()
       global.data = {monitored_trains = {}, new_trains = {}, alert_queue = {}}
-      global.proc = {table_entries = {}}
       data = global.data
-      proc = global.proc
       ui.init()
       if register_ltn_event() then
         data.ltn_stops = {}
       end
-      log2("First time initialization finished.\nDebug data dump follows.\n", data, proc)
+      log2("First time initialization finished.\nDebug data dump follows.\n", data)
     end
   )
   script.on_load(
     function()
       data = global.data
-      proc = global.proc
       ui.on_load()
       register_ltn_event()
       if debug_log then
-        log2("On_load finished.\nDebug data dump follows.\n", data, proc)
+        log2("On_load finished.\nDebug data dump follows.\n", data)
       end
     end
   )
 
-
-  -- DEBUG
-  local mg = require("mod-gui")
   script.on_configuration_changed(
     function(event)
       if register_ltn_event() then
@@ -241,11 +220,7 @@ do
       end
       if event.mod_changes["Train_Alerts"] then
         ui.init()
-        proc.ltn_event = nil
       end
-      --DEBUG
-      mg.get_frame_flow(game.players[1]).clear()
-
     end
   )
 end
