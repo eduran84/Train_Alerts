@@ -14,10 +14,15 @@ local Queue = require("script.queue")
 
 --localize functions and variables
 local update_interval = settings.global["tral-refresh-interval"].value
+local wait_station_state = defines.train_state.wait_station
 local data, monitor_states, ok_states
 local pairs = pairs
 local train_state_dict = defs.dicts.train_state
-local function remove_monitored_train(train_id)
+
+
+-- state change helper function
+
+local function stop_monitoring(train_id)
   if data.active_alerts[train_id] then
     ui.delete_row(train_id)
     data.active_alerts[train_id] = nil
@@ -25,64 +30,72 @@ local function remove_monitored_train(train_id)
   end
   Queue.remove_value(data.alert_queue, train_id)
   data.monitored_trains[train_id] = nil
+  if debug_log then
+    log2("No longer monitoring train", train_id)
+  end
 end
 
-do--[[ on_state_change
-  * triggered on_train_changed_state
-  * adds trains with potential alert states to data.monitored_trains
-  * removes trains from data.monitored_trains when alert state clears
-  --]]
-
-  local wait_station_state = defines.train_state.wait_station
-  local function on_state_change(event)
-    local train_id = event.train.id
-    local new_state = event.train.state
-
-    if data.monitored_trains[train_id] then
-      -- remove or update already monitored train
-      if ok_states[new_state] then
-        remove_monitored_train(train_id)
-        if debug_log then
-          log2("No longer monitoring train", train_id, "because it switched to state", train_state_dict[new_state])
-        end
-      elseif monitor_states[new_state] and new_state ~= data.monitored_trains[train_id].state then
-        data.monitored_trains[train_id].state = new_state
-        if data.active_alerts[train_id] then
-          ui.update_state(train_id, train_state_dict[new_state])
-        end
-        if debug_log then
-          log2("Updated train", train_id, "=", data.monitored_trains[train_id], "from old state", train_state_dict[event.old_state])
-        end
-      end
-
-    elseif monitor_states[new_state] then
-      --- add unmonitored train to monitor list
-      if new_state == wait_station_state and
-          data.ltn_stops and
-          monitor_states[wait_station_state] then
-        -- dont trigger alert fors trains stopped at LTN depots
-        local stop_id = event.train.station and event.train.station.unit_number
-        if stop_id and data.ltn_stops[stop_id] and
-            data.ltn_stops[stop_id].isDepot then
-          return
-        end
-      end -- if new_state == train_state.wait_station ...
-      local alert_time = game.tick + monitor_states[new_state]
-      alert_time = Queue.insert(data.alert_queue, alert_time, train_id)
-      data.monitored_trains[train_id] = {
-        state = new_state,
-        start_time = game.tick,
-        alert_time = alert_time,
-        train = event.train
-      }
-      if debug_log then
-        log2("Monitoring train", train_id, "=", data.monitored_trains[train_id])
-      end
-    end -- elseif monitor_states[new_state]
-  end -- function on_state_change
-
-  script.on_event(defines.events.on_train_changed_state, on_state_change)
+local function start_monitoring(train_id, new_state, train)
+  --- add unmonitored train to monitor list
+  if new_state == wait_station_state and
+      data.ltn_stops and
+      monitor_states[wait_station_state] then
+    -- dont trigger alert fors trains stopped at LTN depots
+    local stop_id = train.station and train.station.unit_number
+    if stop_id and data.ltn_stops[stop_id] and
+        data.ltn_stops[stop_id].isDepot then
+      return
+    end
+  end -- if new_state == train_state.wait_station ...
+  local alert_time = game.tick + monitor_states[new_state]
+  alert_time = Queue.insert(data.alert_queue, alert_time, train_id)
+  data.monitored_trains[train_id] = {
+    state = new_state,
+    start_time = game.tick,
+    alert_time = alert_time,
+    train = train
+  }
+  if debug_log then
+    log2("Monitoring train", train_id, "=", data.monitored_trains[train_id])
+  end
 end
+
+local function update_monitoring(train_id, new_state)
+  data.monitored_trains[train_id].state = new_state
+  if data.active_alerts[train_id] then
+    ui.update_state(train_id, train_state_dict[new_state])
+  else
+    Queue.remove_value(data.alert_queue, train_id)
+    local alert_time = game.tick + monitor_states[new_state]
+    data.monitored_trains[train_id].start_time = game.tick
+    data.monitored_trains[train_id].alert_time = Queue.insert(data.alert_queue, alert_time, train_id)
+  end
+  if debug_log then
+    log2("Updated train", train_id, "=", data.monitored_trains[train_id])
+  end
+end
+
+--[[ on_state_change
+* triggered on_train_changed_state
+* adds trains with potential alert states to data.monitored_trains
+* removes trains from data.monitored_trains when alert state clears
+--]]
+local function on_state_change(event)
+  local train_id = event.train.id
+  local new_state = event.train.state
+
+  if data.monitored_trains[train_id] then
+    -- remove or update already monitored train
+    if ok_states[new_state] then
+      stop_monitoring(train_id)
+    elseif monitor_states[new_state] and new_state ~= data.monitored_trains[train_id].state then
+      update_monitoring(train_id, new_state)
+    end
+  elseif monitor_states[new_state] then
+    start_monitoring(train_id, new_state, event.train)
+  end
+end
+script.on_event(defines.events.on_train_changed_state, on_state_change)
 
 do--[[ on_tick_handler
   * checks alert_queue for a train
@@ -90,7 +103,6 @@ do--[[ on_tick_handler
   * checks update_queue for a train
   * if one exists, displayed time for that train is updated
   --]]
-
   local trains_per_tick = defs.constants.trains_per_tick
   local ticks_to_timestring = require("__OpteraLib__.script.misc").ticks_to_timestring
   local function button_params(id)
@@ -116,10 +128,9 @@ do--[[ on_tick_handler
           ticks_to_timestring(event.tick - train_data.start_time)
         )
       else
-        remove_monitored_train(train_id)
+        stop_monitoring(train_id)
       end
     end
-
     -- update time for active alerts
     train_id = Queue.pop(data.update_queue, event.tick)
     if train_id and data.active_alerts[train_id] then
@@ -128,7 +139,7 @@ do--[[ on_tick_handler
         ui.update_time(train_id, ticks_to_timestring(event.tick - train_data.start_time))
         Queue.insert(data.update_queue, event.tick + update_interval, train_id)
       else
-        remove_monitored_train(train_id)
+        stop_monitoring(train_id)
       end
     end
   end
@@ -159,17 +170,26 @@ do  -- on_runtime_mod_setting_changed
     end
     if set["tral-no-path-timeout"].value >= 0 then
       monitor_states[train_state.no_path] = set["tral-no-path-timeout"].value * 60 + offset
-      --monitor_states[train_state.path_lost] = set["tral-no-path-timeout"].value * 60 + offset
     end
     if set["tral-no-schedule-timeout"].value >= 0 then
       monitor_states[train_state.no_schedule] = set["tral-no-schedule-timeout"].value * 60 + offset
     end
     if set["tral-manual-timeout"].value >= 0 then
       monitor_states[train_state.manual_control] = set["tral-manual-timeout"].value * 60 + offset
-      --monitor_states[train_state.manual_control_stop] = set["tral-manual-timeout"].value * 60 + offset
     else
       ok_states[train_state.manual_control] = true
       ok_states[train_state.manual_control_stop] = true
+    end
+    -- update monitored trains
+    if data then
+      for train_id, train_data in pairs(data.monitored_trains) do
+        local state = train_data.state
+        if monitor_states[state] then
+          update_monitoring(train_id, state)
+        else
+          stop_monitoring(train_id)
+        end
+      end
     end
   end
   update_timeouts() -- call once for initial setup
@@ -204,7 +224,7 @@ do  -- on_gui_click
           if event.button == 2 then -- left mouse button
             open_train_gui(event.player_index, data.monitored_trains[train_id].train)
           else -- right mouse button
-            remove_monitored_train(train_id)
+            stop_monitoring(train_id)
           end
         end
       end
@@ -297,4 +317,3 @@ do -- on_init, on_load, on_configuration_changed
     end
   )
 end
-
