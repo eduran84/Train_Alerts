@@ -84,3 +84,4 @@ default["tral_title_button"] = {
 
 require("prototypes.eui.shared")
 require("prototypes.eui.frame")
+require("prototypes.eui.table")

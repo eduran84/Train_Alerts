@@ -25,6 +25,13 @@ defs.names.gui.frame = {
 }
 defs.names.gui.main_frame = "tral-frame"
 
+defs.names.gui.table = {
+  outer_flow = "eui-tbl/outer-flow",
+  header_frame = "eui-tbl/header-frame",
+  body_frame = "eui-tbl/body-frame",
+  pane = "eui-tbl/pane",
+  table = "eui-tbl/table",
+}
 
 defs.names.controls = {
   toggle_hotkey = "tral-toggle-hotkey",
@@ -47,6 +54,7 @@ defs.names.gui.elements = {
 
   setting_frame = "tral-settings-frame",
   close_button = "tral-close-settings-button",
+  ignore_table = "tral-ignore-list-table"
 }
 
 local sprite_path_sc =  "__Train_Alerts__/graphics/shortcut/"
@@ -63,6 +71,7 @@ defs.spritepath = {
 defs.constants.trains_per_tick = 15
 defs.constants.button_inner_width = {50, 200, 50}
 defs.constants.button_outer_width = 325
+defs.constants.table_col_width = {50, 50, 50, 50, 50, 50}
 
 defs.dicts.train_state = {
   [defines.train_state.on_the_path] = {"train-states.on_the_path"},

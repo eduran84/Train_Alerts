@@ -1,5 +1,6 @@
 -- load modules
 local EUI_Frame = require("script.eui.EUI_Frame")
+local EUI_Table = require("script.eui.EUI_Table")
 
 
 --localize functions and variables
@@ -32,23 +33,39 @@ local function get_frame(pind)
       sprite = "utility/close_white",
       name = element_names.close_button,
     })
-
-    local tbl = frame_obj:add{type = "table", column_count = 3}
-    for i = 1, 3 do
-      local label = tbl.add{
-        type = "label",
-        style = "caption_label",
-        caption = {"tral.settings-col-header-"..i}
+    local headers = {[1] = {type = "label", style = "caption_label", caption = {"tral.settings-col-header-1"}}}
+    local spritelist = {
+      [2] = "item/rail-signal",
+      [3] = "utility/show_player_names_in_map_view",
+      [4] = "item/train-stop",
+      [5] = "utility/questionmark",
+      [6] = "utility/questionmark",
+      }
+    for i = 2, 6 do
+      headers[i] = {
+        type = "sprite-button",
+        style = "close_button",
+        sprite = spritelist[i],
+        enabled = false,
+        tooltip = {"tral.settings-col-header-tt-"..i}
       }
     end
-    frame_obj:add{
-      type = "scroll-pane",
-      vertical_scroll_policy = "auto",
-      horizontal_scroll_policy = "never",
-      name = element_names.main_pane
-    }.add{type = "table", name = element_names.main_table, column_count = 1}
+    local table_obj = EUI_Table.build{
+      parent = frame_obj.body,
+      column_count = 6,
+      header_elements = headers,
+    }
+    local cells = {}
+    for i = 1, 12 do
+      cells[i] = {type = "label", caption = "dummy "..i}
+    end
+
+    table_obj:add_cells(cells)
+
+
     frame_obj:hide()
     gui[element_names.setting_frame][pind] = frame_obj
+    gui[element_names.ignore_table][pind] = table_obj
     return frame_obj
   end
 end
