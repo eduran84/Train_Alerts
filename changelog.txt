@@ -1,4 +1,13 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.3.0
+Date: 2019-04-19
+
+  Features:
+    - Replaced top-left toggle button with shortcut icon.
+    - Alert window now closes automatically when empty.
+    - Right-clicking a train in the list dismisses the alert.
+
+---------------------------------------------------------------------------------------------------
 Version: 0.2.4
 Date: 2019-04-16
 

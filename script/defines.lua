@@ -1,3 +1,8 @@
+--[[ Copyright (c) 2019 Eduran
+ * Part of Train Alerts GUI
+ *
+ * See LICENSE.md in the project directory for license information.
+--]]
 local defs = {
   names = {
     controls = {},
@@ -13,20 +18,13 @@ defs.names.gui.shared = {
   vertical_spacer = "eui-shr/vertical-spacer",
   horizontal_spacer = "eui-shr/horizontal-spacer",
 }
---[[
-defs.names.gui.table = {
-  outer_flow = "eui-tbl/outer-flow",
-  header_frame = "eui-tbl/header-frame",
-  body_frame = "eui-tbl/body-frame",
-  pane = "eui-tbl/pane",
-  table = "eui-tbl/table",
-}
---]]
 defs.names.gui.frame = {
   outer_frame = "eui-frm/outer_frame",
   title_flow = "eui-frm/header_flow",
   title = "eui-frm/title",
 }
+defs.names.gui.main_frame = "tral-frame"
+
 
 defs.names.controls = {
   toggle_hotkey = "tral-toggle-hotkey",

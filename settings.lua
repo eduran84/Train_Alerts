@@ -1,3 +1,8 @@
+--[[ Copyright (c) 2019 Eduran
+ * Part of Train Alerts GUI
+ *
+ * See LICENSE.md in the project directory for license information.
+--]]
 data:extend({
   {
 		name = "tral-open-on-alert",

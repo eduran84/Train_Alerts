@@ -1,3 +1,9 @@
+--[[ Copyright (c) 2019 Eduran
+ * Part of Train Alerts GUI
+ *
+ * See LICENSE.md in the project directory for license information.
+--]]
+
 -- load modules
 log2 = require("__OpteraLib__.script.logger").log
 print = require("__OpteraLib__.script.logger").print

@@ -1,9 +1,15 @@
+--[[ Copyright (c) 2019 Eduran
+ * Part of Train Alerts GUI
+ *
+ * See LICENSE.md in the project directory for license information.
+--]]
+
 -- load modules
 local log2 = require("__OpteraLib__.script.logger").log
 local mod_gui = require("mod-gui")
 local EUI_Frame = require("script.eui.EUI_Frame")
 -- constants
-local frame_name = "tral-frame"
+local frame_name = defs.names.gui.main_frame
 local table_name = "tral_table"
 local pane_name = "tral-scroll"
 local WIDTH = {58, 200, 50}

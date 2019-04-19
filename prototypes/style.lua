@@ -1,37 +1,13 @@
+--[[ Copyright (c) 2019 Eduran
+ * Part of Train Alerts GUI
+ *
+ * See LICENSE.md in the project directory for license information.
+--]]
+
 default = data.raw["gui-style"].default
 local WIDTH = {50, 200, 50}
 local TOT_WIDTH = 325
---[[
-data:extend{
-  {
-    type = "sprite",
-    name = "tral_sprite_loco",
-    filename = "__base__/graphics/icons/diesel-locomotive.png",
-    width = 32,
-    height = 32,
-    scale = 1,
-  },
-}
-default["tral_toggle_button_with_alert"] = {
-  type = "button_style",
-  parent = "mod_gui_button",
-  default_graphical_set = {
-    base = {position = {136, 17}, corner_size = 8},
-    shadow = default_dirt,
-  },
-  hovered_graphical_set = {
-    base = {position = {170, 17}, corner_size = 8},
-    shadow = default_dirt,
-    glow = default_glow(default_glow_color, 0.5),
-  },
-  clicked_vertical_offset = 1,
-  clicked_graphical_set = {
-    base = {position = {187, 17}, corner_size = 8},
-    shadow = default_dirt,
-  },
-}
 
---]]
 local function rounded_button_glow(tint_value)
   return
   {
@@ -62,7 +38,6 @@ local function rounded_button_graphical_set(x, y, glow, size)
   }
 
 end
-
 
 default["tral_button_row"] = {
   type = "button_style",
