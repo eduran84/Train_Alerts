@@ -39,9 +39,9 @@ local function build_table(parent, pind)
   local headers = {[1] = {type = "label", style = "caption_label", caption = {"tral.settings-col-header-1"}}}
   local spritelist = {
     [2] = "item/rail-signal",
-    [3] = "utility/show_player_names_in_map_view",
-    [4] = "item/train-stop",
-    [5] = "utility/questionmark",
+    [3] = "item/train-stop",
+    [4] = "utility/questionmark",
+    [5] = "utility/show_player_names_in_map_view",
     [6] = "utility/questionmark",
     }
   for i = 2, 6 do
@@ -114,19 +114,51 @@ end
 
 local function close(event)
   get_frame(event.player_index):hide()
+  game.players[event.player_index].opened = nil
 end
 
-local function add_train_to_list(event, train_id)
-  local cells = {[1] = {type = "label", caption = tostring(train_id)}}
+
+local add_train_to_list
+do
+  local cell_def = {[1] = {type = "label", style = "hoverable_bold_label", name = "tral_trainbt_i"}}
   for i = 2, 6 do
-    cells[i] = {type = "label", caption = i}
+    cell_def[i] = {type = "text-box", style = "short_number_textfield"}
   end
-  for pind in pairs(game.players) do
-    get_table(pind):add_cells(cells)
+  local i2state = {
+    defines.train_state.wait_signal,
+    defines.train_state.wait_station,
+    defines.train_state.no_path,
+    defines.train_state.manual_control,
+    defines.train_state.no_schedule,
+  }
+
+  add_train_to_list =  function(event, train_id, train, monitor_states)
+    if not(global.data.ignored_trains[train_id]) then
+      cell_def[1].caption = train_id
+      cell_def[1].name = "tral_trainbt_i" .. train_id
+      global.data.ignored_trains[train_id] = {train = train}
+      for i = 2, 6 do
+        cell_def[i].text = (monitor_states[i2state[i]] or 1) - 2
+        cell_def[i].name = train_id .. "_" .. i
+      end
+      for pind in pairs(game.players) do
+        get_table(pind):add_cells(cell_def)
+      end
+    end
+    open(event)
   end
-  open(event)
 end
 
+local function remove_train_from_list(event, train_id)
+  global.data.ignored_trains[train_id] = nil
+  for pind in pairs(game.players) do
+    local tbl = get_table(pind).container
+    tbl["tral_trainbt_i" .. train_id].destroy()
+    for i = 2, 6 do
+      tbl[train_id .. "_" .. i].destroy()
+    end
+  end
+end
 
 script.on_event(defines.events.on_gui_closed,
   function(event)
@@ -143,4 +175,5 @@ return {
   open = open,
   close = close,
   add_train_to_list = add_train_to_list,
+  remove_train_from_list = remove_train_from_list,
 }

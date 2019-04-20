@@ -71,7 +71,7 @@ defs.spritepath = {
 defs.constants.trains_per_tick = 15
 defs.constants.button_inner_width = {50, 200, 50}
 defs.constants.button_outer_width = 325
-defs.constants.table_col_width = {50, 50, 50, 50, 50, 50}
+defs.constants.table_col_width = {100, 100, 100, 100, 100, 100}
 
 defs.dicts.train_state = {
   [defines.train_state.on_the_path] = {"train-states.on_the_path"},

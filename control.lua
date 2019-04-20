@@ -33,7 +33,6 @@ local function stop_monitoring(train_id)
     log2("No longer monitoring train", train_id)
   end
 end
-
 local function start_monitoring(train_id, new_state, train)
   --- add unmonitored train to monitor list
   if new_state == wait_station_state and
@@ -74,6 +73,21 @@ local function update_monitoring(train_id, new_state)
   end
 end
 
+local function force_state_check(train)
+  local train_id = train.id
+  local new_state = train.state
+  if data.monitored_trains[train_id] then
+    -- remove or update already monitored train
+    if ok_states[new_state] or data.ignored_trains[train_id] then
+      stop_monitoring(train_id)
+    elseif monitor_states[new_state] and new_state ~= data.monitored_trains[train_id].state then
+      update_monitoring(train_id, new_state)
+    end
+  elseif monitor_states[new_state] and not data.ignored_trains[train_id] then
+    start_monitoring(train_id, new_state, train)
+  end
+end
+
 --[[ on_state_change
 * triggered on_train_changed_state
 * adds trains with potential alert states to data.monitored_trains
@@ -90,7 +104,7 @@ local function on_state_change(event)
     elseif monitor_states[new_state] and new_state ~= data.monitored_trains[train_id].state then
       update_monitoring(train_id, new_state)
     end
-  elseif monitor_states[new_state] then
+  elseif monitor_states[new_state] and not data.ignored_trains[train_id] then
     start_monitoring(train_id, new_state, event.train)
   end
 end
@@ -213,6 +227,9 @@ end
 do  -- on_gui_click
   local open_train_gui = require("__OpteraLib__.script.train").open_train_gui
   local tonumber, match = tonumber, string.match
+  local function button_click(event, train_id)
+
+  end
   local handler = {
     [defs.names.gui.elements.ignore_button] = ui_settings.open,
     [defs.names.gui.elements.help_button] = nil,
@@ -226,16 +243,39 @@ do  -- on_gui_click
         if handler[event.element.name] then
           handler[event.element.name](event)
         else
-          local train_id = tonumber(match(event.element.name, "tral_trainbt_(%d+)"))
-          if train_id and data.monitored_trains[train_id] then
-            if event.button == 2 then -- left mouse button
-              if event.shift then
-                ui_settings.add_train_to_list(event, train_id)
+          -- train buttons
+          local type, train_id = match(event.element.name, "tral_trainbt_([ai])(%d+)")
+          train_id = tonumber(train_id)
+          if train_id then
+            if type == "a" then  -- click on train in alert list
+              if event.button == 2 and data.monitored_trains[train_id] then
+                if event.shift then
+                  -- Shift + LMB -> add train to ignore list
+                  ui_settings.add_train_to_list(
+                    event,
+                    train_id,
+                    data.monitored_trains[train_id].train,
+                    monitor_states
+                  )
+                  force_state_check(data.monitored_trains[train_id].train)
+                else
+                  -- LMB -> open train UI
+                  open_train_gui(event.player_index, data.monitored_trains[train_id].train)
+                end
               else
-                open_train_gui(event.player_index, data.monitored_trains[train_id].train)
+                -- RMB -> remove train from list
+                stop_monitoring(train_id)
               end
-            else -- right mouse button
-              stop_monitoring(train_id)
+            elseif data.ignored_trains[train_id] then  -- click on train in ignore list
+              local train = data.ignored_trains[train_id].train
+              if event.button == 2  then
+                  -- LMB -> open train UI
+                  open_train_gui(event.player_index, train)
+              else
+                -- RMB -> remove train from list
+                ui_settings.remove_train_from_list(event, train_id)
+                force_state_check(train)
+              end
             end
           end
         end
@@ -301,6 +341,7 @@ do -- on_init, on_load, on_configuration_changed
         alert_queue = Queue.new(),
         update_queue = Queue.new(),
         active_alerts = {},
+        ignored_trains = {},
       }
       data = global.data
       global.gui = {}

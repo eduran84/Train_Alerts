@@ -123,7 +123,7 @@ do
   local button_definition = {
     type = "button",
     style = "tral_button_row",
-    name = "tral_trainbt_",
+    name = "tral_trainbt_a",
     tooltip = {"tral.button-tooltip"},
   }
   local label_definitions = {
@@ -134,7 +134,7 @@ do
   local flow_definition = {type = "flow", ignored_by_interaction = true}
 
   add_row = function(train_id, state, time)
-    button_definition.name = "tral_trainbt_" .. train_id
+    button_definition.name = "tral_trainbt_a" .. train_id
     label_definitions[1].caption = tostring(train_id)
     label_definitions[2].caption = state
     label_definitions[3].caption = time
@@ -152,7 +152,7 @@ end
 local function delete_row(train_id)
   gui.active_alert_count = gui.active_alert_count - 1
   for pind in pairs(game.players) do
-    local button = get_table(pind)["tral_trainbt_" .. train_id]
+    local button = get_table(pind)["tral_trainbt_a" .. train_id]
     if button and button.valid then
       button.destroy()
     end
@@ -164,17 +164,18 @@ end
 
 local function update_time(train_id, new_time)
   for pind in pairs(game.players) do
-    local button = get_table(pind)["tral_trainbt_" .. train_id]
+    local button = get_table(pind)["tral_trainbt_a" .. train_id]
     button.children[1].children[3].caption = new_time
   end
 end
 
 local function update_state(train_id, new_state)
   for pind in pairs(game.players) do
-    local button = get_table(pind)["tral_trainbt_" .. train_id]
+    local button = get_table(pind)["tral_trainbt_a" .. train_id]
     button.children[1].children[2].caption = new_state
   end
 end
+
 
 script.on_event(names.controls.toggle_hotkey,
   function(event)

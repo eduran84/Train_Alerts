@@ -43,7 +43,7 @@ for i = 1,6 do
   col_width_def[i] = {column = i, width = col_width[i]}
   col_align_def[i] = {column = i, alignment = "middle-center"}
 end
-col_align_def[1] = {column = 1, alignment = "middle-left"}
+col_align_def[1] = {column = 1, alignment = "middle-right"}
 
 
 default[names.table] = {

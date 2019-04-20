@@ -38,8 +38,9 @@ function EUI_Table.build(args)
 end
 
 function methods.add_cells(table_obj, cells)
+  local tbl_add = table_obj.container.add
   for _, cell in pairs(cells) do
-    table_obj.container.add(cell)
+    tbl_add(cell)
   end
 end
 
