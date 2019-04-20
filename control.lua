@@ -229,7 +229,11 @@ do  -- on_gui_click
           local train_id = tonumber(match(event.element.name, "tral_trainbt_(%d+)"))
           if train_id and data.monitored_trains[train_id] then
             if event.button == 2 then -- left mouse button
-              open_train_gui(event.player_index, data.monitored_trains[train_id].train)
+              if event.shift then
+                ui_settings.add_train_to_list(event, train_id)
+              else
+                open_train_gui(event.player_index, data.monitored_trains[train_id].train)
+              end
             else -- right mouse button
               stop_monitoring(train_id)
             end

@@ -31,7 +31,7 @@ local function get_frame(pind)
       direction = "vertical",
       style = "tral_transparent_frame",
     }
-    frame_obj.frame.style.maximal_height = settings.get_player_settings(game.players[pind])["tral-window-height"].value
+    frame_obj:style().maximal_height = settings.get_player_settings(game.players[pind])["tral-window-height"].value
     frame_obj:add_title_button({
       type = "sprite-button",
       style = "tral_title_button",
@@ -70,8 +70,8 @@ end
 
 local function get_table(pind)
   local frame_obj = get_frame(pind)
-  return frame_obj.body[element_names.main_pane]
-      and frame_obj.body[element_names.main_pane][element_names.main_table]
+  return frame_obj.container[element_names.main_pane]
+      and frame_obj.container[element_names.main_pane][element_names.main_table]
 end
 
 local function show(pind)

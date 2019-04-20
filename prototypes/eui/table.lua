@@ -1,3 +1,8 @@
+--[[ Copyright (c) 2019 Eduran
+ * Part of Train Alerts GUI
+ *
+ * See LICENSE.md in the project directory for license information.
+--]]
 local names = defs.names.gui.table
 local col_width = defs.constants.table_col_width
 
@@ -30,19 +35,23 @@ default[names.pane] = {
   bottom_padding = 4,
   left_padding = 4,
   extra_padding_when_activated = 0,
-  vertical_scroll_policy = "auto-and-reserve-space",
 }
 
 local col_width_def = {}
+local col_align_def = {}
 for i = 1,6 do
   col_width_def[i] = {column = i, width = col_width[i]}
+  col_align_def[i] = {column = i, alignment = "middle-center"}
 end
+col_align_def[1] = {column = 1, alignment = "middle-left"}
+
 
 default[names.table] = {
   type = "table_style",
   horizontal_spacing = 2,
   vertical_spacing = 2,
   column_widths = col_width_def,
+  column_alignments = col_align_def,
   --[[
   column_graphical_set = {
     filename = "__core__/graphics/gui.png",

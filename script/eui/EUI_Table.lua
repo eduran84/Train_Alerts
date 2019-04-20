@@ -1,6 +1,11 @@
+--[[ Copyright (c) 2019 Eduran
+ * Part of Train Alerts GUI
+ *
+ * See LICENSE.md in the project directory for license information.
+--]]
 local sty = require("script.defines").names.gui.table
 
-local methods = {}
+local methods = require("script.eui.EUI_shared")()
 local EUI_Table = {}
 EUI_Table.mt = {}
 EUI_Table.mt.__index = methods
@@ -20,9 +25,13 @@ function EUI_Table.build(args)
     end
   end
   local frame = flow.add{type = "frame", style = sty.body_frame}
-  local pane = frame.add{type = "scroll-pane", style = sty.pane}
-  new_table.flow = flow
-  new_table.body = pane.add{type = "table", column_count = n_cols, style = sty.table}
+  local pane = frame.add{type = "scroll-pane", style = sty.pane, vertical_scroll_policy = "auto-and-reserve-space"}
+  new_table.outer = flow
+  new_table.container = pane.add{
+    type = "table",
+    column_count = n_cols,
+    style = sty.table,
+  }
 
   setmetatable(new_table, EUI_Table.mt)
   return new_table
@@ -30,21 +39,13 @@ end
 
 function methods.add_cells(table_obj, cells)
   for _, cell in pairs(cells) do
-    table_obj.body.add(cell)
+    table_obj.container.add(cell)
   end
 end
 
 function methods.get_table_cell(table_obj, row, col)
   local N = (row - 1) * table_obj.column_count + col
-  return table_obj.body.children[N]
-end
-
-function methods.clear(table_obj)
-  table_obj.body.clear()
-end
-
-function methods.destroy(table_obj)
- table_obj.flow.destroy()
+  return table_obj.container.children[N]
 end
 
 return EUI_Table
