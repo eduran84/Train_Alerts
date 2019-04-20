@@ -1,11 +1,5 @@
---[[ Copyright (c) 2019 Eduran
- * Part of Train Alerts GUI
- *
- * See LICENSE.md in the project directory for license information.
---]]
 local defs = {
   names = {
-    controls = {},
     gui = {}
   },
   dicts = {},
@@ -33,13 +27,6 @@ defs.names.gui.table = {
   table = "eui-tbl/table",
 }
 
-defs.names.controls = {
-  toggle_hotkey = "tral-toggle-hotkey",
-  left_mouse = 2,
-  right_mouse = 4,
-  toggle_shortcut = "tral-toggle-shortcut",
-}
-
 defs.names.gui.sprites = {
   questionmark_white = "tral_icon_questionmark_white",
   ignore_white = "tral_icon_ignore_white",
@@ -56,6 +43,33 @@ defs.names.gui.elements = {
   close_button = "tral-close-settings-button",
   ignore_table = "tral-ignore-list-table"
 }
+
+defs.names.controls = {
+  toggle_hotkey = "tral-toggle-hotkey",
+  left_mouse = 2,
+  right_mouse = 4,
+  toggle_shortcut = "tral-toggle-shortcut",
+}
+
+defs.names.settings = {
+  open_on_alert = "tral-open-on-alert",
+  window_height = "tral-window-height",
+  refresh_interval = "tral-refresh-interval",
+  debug_mode = "tral-debug-level",
+  timeout_station = "tral-timeout-station",
+  timeout_signal = "tral-timeout-signal",
+  timeout_path = "tral-timeout-no-path",
+  timeout_schedule = "tral-timeout-no-schedule",
+  timeout_manual = "tral-timeout-manual",
+}
+
+defs.events = {
+  on_new_alert = 1,
+  on_state_updated = 2,
+  on_alert_expired = 3,
+  on_alert_removed = 10,
+}
+
 
 local sprite_path_sc =  "__Train_Alerts__/graphics/shortcut/"
 local sprite_path_icon = "__Train_Alerts__/graphics/icons/"

@@ -3,7 +3,7 @@
  *
  * See LICENSE.md in the project directory for license information.
 --]]
-defs = require("script.defines")
+defs = require("defines")
 require("prototypes.style")
 
 data:extend({{

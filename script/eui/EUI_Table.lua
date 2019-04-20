@@ -3,7 +3,7 @@
  *
  * See LICENSE.md in the project directory for license information.
 --]]
-local sty = require("script.defines").names.gui.table
+local sty = defs.names.gui.table
 
 local methods = require("script.eui.EUI_shared")()
 local EUI_Table = {}

@@ -3,7 +3,7 @@
  *
  * See LICENSE.md in the project directory for license information.
 --]]
-local names = require("script.defines").names.gui.frame
+local names = defs.names.gui.frame
 
 
 default["tral_transparent_frame"] = {

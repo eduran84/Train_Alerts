@@ -1,28 +1,25 @@
---[[ Copyright (c) 2019 Eduran
- * Part of Train Alerts GUI
- *
- * See LICENSE.md in the project directory for license information.
---]]
+local names = require("defines").names.settings
+
 data:extend({
   {
-		name = "tral-open-on-alert",
+		name = names.open_on_alert,
 		setting_type = "runtime-per-user",
 		type = "bool-setting",
 		default_value = true,
-    order = "b"
+    order = "a"
 	},
   {
-		name = "tral-window-height",
+		name = names.window_height,
 		setting_type = "runtime-per-user",
 		type = "int-setting",
 		default_value = 300,
 		minimum_value = 200,
 		maximum_value = 1500,
-    order = "c"
+    order = "b"
 	},
 
   {
-		name = "tral-refresh-interval",
+		name = names.refresh_interval,
 		setting_type = "runtime-global",
 		type = "int-setting",
 		default_value = 60,
@@ -31,55 +28,55 @@ data:extend({
     order = "a"
 	},
 	{
-		name = "tral-debug-level",
+		name = names.debug_mode,
     setting_type = "runtime-global",
 		type = "bool-setting",
     default_value = false,
     order = "z"
 	},
   {
-		name = "tral-station-timeout",
+		name = names.timeout_station,
 		setting_type = "runtime-global",
 		type = "int-setting",
 		default_value = 60,
 		minimum_value = -1,
 		maximum_value = 3600,
-    order = "b"
+    order = "b1"
 	},
   {
-		name = "tral-signal-timeout",
+		name = names.timeout_signal,
 		setting_type = "runtime-global",
 		type = "int-setting",
 		default_value = 60,
 		minimum_value = -1,
 		maximum_value = 3600,
-    order = "b"
+    order = "b2"
 	},
   {
-		name = "tral-no-path-timeout",
+		name = names.timeout_path,
 		setting_type = "runtime-global",
 		type = "int-setting",
 		default_value = 0,
 		minimum_value = -1,
 		maximum_value = 3600,
-    order = "b"
+    order = "b3"
 	},
   {
-		name = "tral-no-schedule-timeout",
+		name = names.timeout_schedule,
 		setting_type = "runtime-global",
 		type = "int-setting",
 		default_value = 60,
 		minimum_value = -1,
 		maximum_value = 3600,
-    order = "b"
+    order = "b4"
 	},
   {
-		name = "tral-manual-timeout",
+		name = names.timeout_manual,
 		setting_type = "runtime-global",
 		type = "int-setting",
 		default_value = -1,
 		minimum_value = -1,
 		maximum_value = 3600,
-    order = "b"
+    order = "b5"
 	},
 })

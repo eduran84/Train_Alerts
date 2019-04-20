@@ -1,8 +1,3 @@
---[[ Copyright (c) 2019 Eduran
- * Part of Train Alerts GUI
- *
- * See LICENSE.md in the project directory for license information.
---]]
 local Queue = {}
 
 function Queue.new()

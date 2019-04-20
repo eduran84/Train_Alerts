@@ -3,8 +3,8 @@
  *
  * See LICENSE.md in the project directory for license information.
 --]]
-local sty = require("script.defines").names.gui.frame
-local sty_shared = require("script.defines").names.gui.shared
+local sty = defs.names.gui.frame
+local sty_shared = defs.names.gui.shared
 
 local methods = require("script.eui.EUI_shared")()
 local EUI_Frame = {}

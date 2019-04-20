@@ -5,7 +5,6 @@
 --]]
 
 default = data.raw["gui-style"].default
-defs = require("script.defines")
 require("prototypes.sprites")
 
 -- alert button styles
