@@ -136,7 +136,14 @@ do
     if not(global.data.ignored_trains[train_id]) then
       cell_def[1].caption = train_id
       cell_def[1].name = "tral_trainbt_i" .. train_id
-      global.data.ignored_trains[train_id] = {train = train}
+      global.data.ignored_trains[train_id] = {
+        train = train,
+        ["ok_states"] = {
+          [defines.train_state.wait_signal] = true,
+          [defines.train_state.wait_station] = true,
+        },
+        monitor_states = {},
+      }
       for i = 2, 6 do
         cell_def[i].text = (monitor_states[i2state[i]] or 1) - 2
         cell_def[i].name = train_id .. "_" .. i

@@ -11,104 +11,19 @@ debug_log = settings.global["tral-debug-level"].value
 defs = require("script.defines")
 local ui = require("script.gui_alert_window")
 local ui_settings = require("script.gui_settings_window")
+local monitor = require("script.train_state_monitor")
 local Queue = require("script.queue")
 
 --localize functions and variables
 local update_interval = settings.global["tral-refresh-interval"].value
 local wait_station_state = defines.train_state.wait_station
-local data, monitor_states, ok_states
 local pairs = pairs
 local train_state_dict = defs.dicts.train_state
 
 -- state change helper function
-local function stop_monitoring(train_id)
-  if data.active_alerts[train_id] then
-    ui.delete_row(train_id)
-    data.active_alerts[train_id] = nil
-    Queue.remove_value(data.update_queue, train_id)
-  end
-  Queue.remove_value(data.alert_queue, train_id)
-  data.monitored_trains[train_id] = nil
-  if debug_log then
-    log2("No longer monitoring train", train_id)
-  end
-end
-local function start_monitoring(train_id, new_state, train)
-  --- add unmonitored train to monitor list
-  if new_state == wait_station_state and
-      data.ltn_stops and
-      monitor_states[wait_station_state] then
-    -- dont trigger alert fors trains stopped at LTN depots
-    local stop_id = train.station and train.station.unit_number
-    if stop_id and data.ltn_stops[stop_id] and
-        data.ltn_stops[stop_id].isDepot then
-      return
-    end
-  end -- if new_state == train_state.wait_station ...
-  local alert_time = game.tick + monitor_states[new_state]
-  alert_time = Queue.insert(data.alert_queue, alert_time, train_id)
-  data.monitored_trains[train_id] = {
-    state = new_state,
-    start_time = game.tick,
-    alert_time = alert_time,
-    train = train
-  }
-  if debug_log then
-    log2("Monitoring train", train_id, "=", data.monitored_trains[train_id])
-  end
-end
-
-local function update_monitoring(train_id, new_state)
-  data.monitored_trains[train_id].state = new_state
-  if data.active_alerts[train_id] then
-    ui.update_state(train_id, train_state_dict[new_state])
-  else
-    Queue.remove_value(data.alert_queue, train_id)
-    local alert_time = game.tick + monitor_states[new_state]
-    data.monitored_trains[train_id].start_time = game.tick
-    data.monitored_trains[train_id].alert_time = Queue.insert(data.alert_queue, alert_time, train_id)
-  end
-  if debug_log then
-    log2("Updated train", train_id, "=", data.monitored_trains[train_id])
-  end
-end
-
-local function force_state_check(train)
-  local train_id = train.id
-  local new_state = train.state
-  if data.monitored_trains[train_id] then
-    -- remove or update already monitored train
-    if ok_states[new_state] or data.ignored_trains[train_id] then
-      stop_monitoring(train_id)
-    elseif monitor_states[new_state] and new_state ~= data.monitored_trains[train_id].state then
-      update_monitoring(train_id, new_state)
-    end
-  elseif monitor_states[new_state] and not data.ignored_trains[train_id] then
-    start_monitoring(train_id, new_state, train)
-  end
-end
-
---[[ on_state_change
-* triggered on_train_changed_state
-* adds trains with potential alert states to data.monitored_trains
-* removes trains from data.monitored_trains when alert state clears
---]]
-local function on_state_change(event)
-  local train_id = event.train.id
-  local new_state = event.train.state
-
-  if data.monitored_trains[train_id] then
-    -- remove or update already monitored train
-    if ok_states[new_state] then
-      stop_monitoring(train_id)
-    elseif monitor_states[new_state] and new_state ~= data.monitored_trains[train_id].state then
-      update_monitoring(train_id, new_state)
-    end
-  elseif monitor_states[new_state] and not data.ignored_trains[train_id] then
-    start_monitoring(train_id, new_state, event.train)
-  end
-end
-script.on_event(defines.events.on_train_changed_state, on_state_change)
+local stop_monitoring = monitor.stop
+local update_monitoring = monitor.update
+local force_state_check = monitor.full_state_check
 
 do--[[ on_tick_handler
   * checks alert_queue for a train
@@ -118,6 +33,7 @@ do--[[ on_tick_handler
   --]]
   local trains_per_tick = defs.constants.trains_per_tick
   local ticks_to_timestring = require("__OpteraLib__.script.misc").ticks_to_timestring
+  local pop, insert = Queue.pop, Queue.insert
   local function button_params(id)
     return {
       type = "button",
@@ -129,12 +45,12 @@ do--[[ on_tick_handler
 
   local function on_tick_handler(event)
     -- add train to alert
-    local train_id = Queue.pop(data.alert_queue, event.tick)
+    local train_id = pop(data.alert_queue, event.tick)
     if train_id then
       local train_data = data.monitored_trains[train_id]
       if train_data.train.valid then
         data.active_alerts[train_id] = true
-        Queue.insert(data.update_queue, event.tick + update_interval, train_id)
+        insert(data.update_queue, event.tick + update_interval, train_id)
         ui.add_row(
           train_id,
           train_state_dict[train_data.state],
@@ -145,12 +61,12 @@ do--[[ on_tick_handler
       end
     end
     -- update time for active alerts
-    train_id = Queue.pop(data.update_queue, event.tick)
+    train_id = pop(data.update_queue, event.tick)
     if train_id and data.active_alerts[train_id] then
       local train_data = data.monitored_trains[train_id]
       if train_data.train.valid then
         ui.update_time(train_id, ticks_to_timestring(event.tick - train_data.start_time))
-        Queue.insert(data.update_queue, event.tick + update_interval, train_id)
+        insert(data.update_queue, event.tick + update_interval, train_id)
       else
         stop_monitoring(train_id)
       end
@@ -309,12 +225,10 @@ do -- on_init, on_load, on_configuration_changed
               break
             end
           end -- if new_state == train_state.wait_station ...
-          local alert_time = game.tick + monitor_states[state]
-          alert_time = Queue.insert(data.alert_queue, alert_time, train_id)
+          Queue.insert(data.alert_queue, game.tick + monitor_states[state], train_id)
           data.monitored_trains[train_id] = {
             state = state,
             start_time = game.tick,
-            alert_time = alert_time,
             train = train
           }
         end
