@@ -83,10 +83,14 @@ defs.pathes.sprites = {
   questionmark_white = sprite_path_icon .. "questionmark_white.png",
   ignore_white = sprite_path_icon .. "ignore_white.png",
 }
+local optera_lib = "__OpteraLib__.script."
 defs.pathes.modules = {
   queue = "script.queue",
   EGM_Frame = "script.EGM.frame",
   EGM_Table = "script.EGM.table",
+  OL_misc = optera_lib .. "misc",
+  OL_train = optera_lib .. "train",
+  logger = optera_lib .. "logger"
 }
 
 

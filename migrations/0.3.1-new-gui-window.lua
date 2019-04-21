@@ -10,6 +10,7 @@ global.gui_alert_window = {
   alert_tables = {},
   show_on_alert = {},
   active_alert_count = 0,
+  ui_actions = {}
 }
 
 global.train_state_monitor = {

@@ -1,6 +1,6 @@
 defs = require("defines")
---util = require("script/script_util")
-logger = require("__OpteraLib__.script.logger")
+util = require("script.util")
+logger = require(defs.pathes.modules.logger)
 log2 = logger.log
 print = logger.print
 
@@ -14,12 +14,11 @@ commands.add_command("reset", "",
   end
 )
 
-local internal_events = {}
-function raise_internal_event(event, data)
-  for _, handler in pairs(internal_events[event]) do
+local private_events = {}
+function raise_private_event(event, data)
+  for _, handler in pairs(private_events[event]) do
     handler(data)
   end
-
 end
 
 local modules = {
@@ -41,16 +40,16 @@ local function register_events(modules)
   }
 
   for module_name, module in pairs (modules) do
-    if module.get_events and module.get_internal_events then
+    if module.get_events and module.get_private_events then
       local module_events = module.get_events()
       for event, handler in pairs (module_events) do
         all_events[event] = all_events[event] or {}
         all_events[event][module_name] = handler
       end
-      module_events = module.get_internal_events()
+      module_events = module.get_private_events()
       for event, handler in pairs (module_events) do
-        internal_events[event] = internal_events[event] or {}
-        internal_events[event][module_name] = handler
+        private_events[event] = private_events[event] or {}
+        private_events[event][module_name] = handler
       end
     else
       error(module_name .. " has no get_events function.")

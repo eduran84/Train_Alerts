@@ -153,7 +153,7 @@ local events =
   [defines.events.on_gui_closed] = on_gui_closed
 }
 
-local internal_events =
+local private_events =
 {
   [defs.events.on_train_ignored] = add_train_to_list
 }
@@ -178,8 +178,8 @@ function gui_settings_window.get_events()
   return events
 end
 
-function gui_settings_window.get_internal_events()
-  return internal_events
+function gui_settings_window.get_private_events()
+  return private_events
 end
 
 function gui_settings_window.on_configuration_changed(data)

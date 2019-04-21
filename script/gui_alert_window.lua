@@ -15,6 +15,7 @@ local data = {
   alert_tables = {},
   show_on_alert = {},
   active_alert_count = 0,
+  ui_elements = {},
 }
 
 -- private UI functions
@@ -30,20 +31,28 @@ local function build_frame(pind)
     }
   )
   frame.style.maximal_height = settings.get_player_settings(player)[names.settings.window_height].value
-  EGM_Frame.add_button(frame, {
-    type = "sprite-button",
-    style = "tral_title_button",
-    tooltip = {"tral.help-button-tt"},
-    sprite = names.gui.sprites.questionmark_white,
-    name = element_names.help_button,
-  })
-  EGM_Frame.add_button(frame, {
-    type = "sprite-button",
-    style = "tral_title_button",
-    tooltip = {"tral.ignore-button-tt"},
-    sprite = names.gui.sprites.ignore_white,
-    name = element_names.ignore_button,
-  })
+  util.register_ui(
+    data.ui_elements,
+    EGM_Frame.add_button(frame, {
+      type = "sprite-button",
+      style = "tral_title_button",
+      tooltip = {"tral.help-button-tt"},
+      sprite = names.gui.sprites.questionmark_white,
+      --name = element_names.help_button,
+    }),
+    {name = "show_help"}
+  )
+  util.register_ui(
+    data.ui_elements,
+    EGM_Frame.add_button(frame, {
+      type = "sprite-button",
+      style = "tral_title_button",
+      tooltip = {"tral.ignore-button-tt"},
+      sprite = names.gui.sprites.ignore_white,
+      --name = element_names.ignore_button,
+    }),
+    {name = "open_settings"}
+  )
   data.alert_frames[pind] = frame
   frame.visible = false
 
@@ -160,17 +169,33 @@ local function update_button(event)
   end
 end
 
- local handler = {
-  [defs.names.gui.elements.ignore_button] = nil,--ui_settings.open,
-  [defs.names.gui.elements.help_button] = nil,
-  [defs.names.gui.elements.close_button] = nil,-- ui_settings.close,
-}
-local open_train_gui = require("__OpteraLib__.script.train").open_train_gui
+local open_train_gui = util.train.open_train_gui
 local match, tonumber = string.match, tonumber
-local raise_internal_event = raise_internal_event
+local raise_private_event = raise_private_event
+local gui_actions = {
+  open_settings = function(event, args)
+    raise_private_event(defs.events.on_train_ignored, event)
+    }
+  )
+  end,
+}
+
+local on_gui_action = function(event)
+  local element = event.element
+  if not (element and element.valid) then return end
+  local player_data = data.ui_elements[event.player_index]
+  if not player_data then return end
+  local action = player_data[element.index]
+  if action then
+    gui_actions[action.name](event, action)
+    return true
+  end
+end
+
 local function on_gui_input(event)
   if event.element and event.element.name then
     local name = event.element.name
+    on_gui_action(event)
     if debug_mode then log2("on_gui_click event received:", event) end
 
     if handler[name] then
@@ -182,7 +207,7 @@ local function on_gui_input(event)
         if event.button == 2 and tsm.monitored_trains[train_id] then
           if event.shift then
             -- Shift + LMB -> add train to ignore list
-            raise_internal_event(
+            raise_private_event(
               defs.events.on_train_ignored, {
                 player_index = event.player_index,
                 train_id = train_id,
@@ -195,12 +220,14 @@ local function on_gui_input(event)
           end
         else
           -- RMB -> remove train from list
-          raise_internal_event(defs.events.on_alert_removed, train_id)
+          raise_private_event(defs.events.on_alert_removed, train_id)
         end
       end
     end
   end
 end
+
+
 
 local function on_toggle_hotkey(event)
   if debug_mode then log2("Toggle hotkey pressed. Event data:", event) end
@@ -233,7 +260,7 @@ local events =
   [defines.events.on_player_created] = on_player_created,
 }
 
-local internal_events =
+local private_events =
 {
   [defs.events.on_new_alert] = add_row,
   [defs.events.on_state_updated] = update_button,
@@ -259,8 +286,8 @@ function gui_alert_window.get_events()
   return events
 end
 
-function gui_alert_window.get_internal_events()
-  return internal_events
+function gui_alert_window.get_private_events()
+  return private_events
 end
 
 function gui_alert_window.on_configuration_changed(data)

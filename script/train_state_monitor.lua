@@ -2,8 +2,8 @@
 local Queue = require(defs.pathes.modules.queue)
 local pop, insert = Queue.pop, Queue.insert
 local pairs, max = pairs, math.max
-local ticks_to_timestring = require("__OpteraLib__.script.misc").ticks_to_timestring
-local raise_internal_event = raise_internal_event
+local ticks_to_timestring = util.misc.ticks_to_timestring
+local raise_private_event = raise_private_event
 
 local update_interval = settings.global[defs.names.settings.refresh_interval].value
 local wait_station_state = defines.train_state.wait_station
@@ -26,7 +26,7 @@ shared.train_state_monitor = {
 
 local function stop_monitoring(train_id)
   if data.active_alerts[train_id] then
-    raise_internal_event(defs.events.on_alert_expired, train_id)
+    raise_private_event(defs.events.on_alert_expired, train_id)
     data.active_alerts[train_id] = nil
     Queue.remove_value(data.update_queue, train_id)
   end
@@ -63,7 +63,7 @@ end
 local function update_monitored_train(train_id, new_state, timeout)
   data.monitored_trains[train_id].state = new_state
   if data.active_alerts[train_id] then
-    raise_internal_event(
+    raise_private_event(
       defs.events.on_state_updated,
       {
         name = "state",
@@ -160,7 +160,7 @@ local function on_tick(event)
     if train_data.train.valid then
       data.active_alerts[train_id] = true
       insert(data.update_queue, event.tick + update_interval, train_id)
-      raise_internal_event(
+      raise_private_event(
         on_new_alert,
         {
           train_id = train_id,
@@ -177,7 +177,7 @@ local function on_tick(event)
   if train_id and data.active_alerts[train_id] then
     local train_data = data.monitored_trains[train_id]
     if train_data.train.valid then
-      raise_internal_event(
+      raise_private_event(
         defs.events.on_state_updated,
         {
           name = "time",
@@ -255,7 +255,7 @@ local events =
   [defines.events.on_tick] = on_tick,
   [defines.events.on_runtime_mod_setting_changed] = on_settings_changed,
 }
-local internal_events =
+local private_events =
 {
   [defs.events.on_alert_removed] = stop_monitoring,
 }
@@ -276,8 +276,8 @@ function train_state_monitor.get_events()
   return events
 end
 
-function train_state_monitor.get_internal_events()
-  return internal_events
+function train_state_monitor.get_private_events()
+  return private_events
 end
 
 function train_state_monitor.on_configuration_changed(data)
