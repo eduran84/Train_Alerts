@@ -4,8 +4,9 @@ local defs = {
   },
   dicts = {},
   constants = {},
-  spritepath = {},
+  pathes = {},
 }
+local mod_prefix = "tral_"
 
 -- EUI names
 defs.names.gui.shared = {
@@ -49,16 +50,18 @@ defs.names.controls = {
   toggle_shortcut = "tral-toggle-shortcut",
 }
 
+
+local timeout_prefix = mod_prefix .. "timeout_"
 defs.names.settings = {
-  open_on_alert = "tral-open-on-alert",
-  window_height = "tral-window-height",
-  refresh_interval = "tral-refresh-interval",
-  debug_mode = "tral-debug-level",
-  timeout_station = "tral-timeout-station",
-  timeout_signal = "tral-timeout-signal",
-  timeout_path = "tral-timeout-no-path",
-  timeout_schedule = "tral-timeout-no-schedule",
-  timeout_manual = "tral-timeout-manual",
+  open_on_alert = mod_prefix .. "open_on_alert",
+  window_height = mod_prefix .. "window_height",
+  refresh_interval = mod_prefix .. "refresh_interval",
+  debug_mode = mod_prefix .. "debug_level",
+  timeout_station = timeout_prefix .. "station",
+  timeout_signal = timeout_prefix .. "signal",
+  timeout_path = timeout_prefix .. "no-path",
+  timeout_schedule = timeout_prefix .. "no-schedule",
+  timeout_manual = timeout_prefix .. "manual",
 }
 
 defs.events = {
@@ -71,7 +74,7 @@ defs.events = {
 
 local sprite_path_sc =  "__Train_Alerts__/graphics/shortcut/"
 local sprite_path_icon = "__Train_Alerts__/graphics/icons/"
-defs.spritepath = {
+defs.pathes.sprites = {
   shortcut_x32 = sprite_path_sc .. "x32.png",
   shortcut_x32_bw = sprite_path_sc .. "x32_bw.png",
   shortcut_x24 = sprite_path_sc .. "x24.png",
@@ -79,6 +82,8 @@ defs.spritepath = {
   questionmark_white = sprite_path_icon .. "questionmark_white.png",
   ignore_white = sprite_path_icon .. "ignore_white.png",
 }
+defs.pathes.modules = {queue = "script.queue"}
+
 
 defs.constants.trains_per_tick = 15
 defs.constants.button_inner_width = {50, 200, 50}

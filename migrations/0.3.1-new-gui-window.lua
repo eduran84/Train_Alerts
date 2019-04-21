@@ -3,7 +3,7 @@ global = {}
 
 debug_mode = settings.global[defs.names.settings.debug_mode].value
 
-local Queue = require("script.queue")
+local Queue = require(defs.pathes.modules.queue)
 global.gui_alert_window = {
   viewing_players = {},
   alert_frames = {},

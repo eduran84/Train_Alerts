@@ -23,7 +23,7 @@ data:extend({
 		setting_type = "runtime-global",
 		type = "int-setting",
 		default_value = 60,
-		minimum_value = 20,
+		minimum_value = 30,
 		maximum_value = 600,
     order = "a"
 	},
@@ -38,7 +38,7 @@ data:extend({
 		name = names.timeout_station,
 		setting_type = "runtime-global",
 		type = "int-setting",
-		default_value = 60,
+		default_value = 90,
 		minimum_value = -1,
 		maximum_value = 3600,
     order = "b1"
@@ -47,7 +47,7 @@ data:extend({
 		name = names.timeout_signal,
 		setting_type = "runtime-global",
 		type = "int-setting",
-		default_value = 60,
+		default_value = 90,
 		minimum_value = -1,
 		maximum_value = 3600,
     order = "b2"
@@ -74,7 +74,7 @@ data:extend({
 		name = names.timeout_manual,
 		setting_type = "runtime-global",
 		type = "int-setting",
-		default_value = -1,
+		default_value = 60,
 		minimum_value = -1,
 		maximum_value = 3600,
     order = "b5"

@@ -30,7 +30,7 @@ local function build_frame(pind)
       style = "tral_transparent_frame",
     }
   )
-  frame.style.maximal_height = settings.get_player_settings(player)["tral-window-height"].value
+  frame.style.maximal_height = settings.get_player_settings(player)[names.settings.window_height].value
   EGM_Frame.add_button(frame, {
     type = "sprite-button",
     style = "tral_title_button",

@@ -1,8 +1,3 @@
---[[ Copyright (c) 2019 Eduran
- * Part of Train Alerts GUI
- *
- * See LICENSE.md in the project directory for license information.
---]]
 defs = require("defines")
 require("prototypes.style")
 
@@ -25,7 +20,7 @@ data:extend({{
   associated_control_input = defs.names.controls.toggle_hotkey,
   icon =
   {
-    filename = defs.spritepath.shortcut_x32,
+    filename = defs.pathes.sprites.shortcut_x32,
     priority = "extra-high-no-scale",
     size = 32,
     scale = 1,
@@ -33,7 +28,7 @@ data:extend({{
   },
   disabled_icon =
   {
-    filename = defs.spritepath.shortcut_x32_bw,
+    filename = defs.pathes.sprites.shortcut_x32_bw,
     priority = "extra-high-no-scale",
     size = 32,
     scale = 1,
@@ -41,14 +36,14 @@ data:extend({{
   },
   small_icon =
   {
-    filename = defs.spritepath.shortcut_x24,
+    filename = defs.pathes.sprites.shortcut_x24,
     size = 24,
     scale = 1,
     flags = {"icon"}
   },
   disabled_small_icon =
   {
-    filename = defs.spritepath.shortcut_x24_bw,
+    filename = defs.pathes.sprites.shortcut_x24_bw,
     priority = "extra-high-no-scale",
     size = 24,
     scale = 1,

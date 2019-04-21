@@ -1,11 +1,11 @@
 --localize functions and variables
-local Queue = require("script.queue")
+local Queue = require(defs.pathes.modules.queue)
 local pop, insert = Queue.pop, Queue.insert
 local pairs, max = pairs, math.max
 local ticks_to_timestring = require("__OpteraLib__.script.misc").ticks_to_timestring
 local raise_internal_event = raise_internal_event
 
-local update_interval = settings.global["tral-refresh-interval"].value
+local update_interval = settings.global[defs.names.settings.refresh_interval].value
 local wait_station_state = defines.train_state.wait_station
 local trains_per_tick = defs.constants.trains_per_tick
 local train_state_dict = defs.dicts.train_state
@@ -233,8 +233,6 @@ local function update_timeouts()
     ok_states[train_state.manual_control] = true
     ok_states[train_state.manual_control_stop] = true
   end
-  -- update monitored trains
-  -- TODO add update for un-monitored trains
 end
 
 local function on_settings_changed(event)
