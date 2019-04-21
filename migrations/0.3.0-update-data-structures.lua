@@ -10,11 +10,11 @@ local frame_name = "tral-frame"
 for pind, player in pairs(game.players) do
   if mg.get_frame_flow(player)["tral-frame"] and mg.get_frame_flow(player)["tral-frame"].valid then
     mg.get_frame_flow(player)["tral-frame"].destroy()
-    log2("Deleting old toggle button.")
+    log2("Deleting old alert window.")
   end
   if mg.get_button_flow(player)["tral_toggle_button"] and mg.get_button_flow(player)["tral_toggle_button"].valid then
     mg.get_button_flow(player)["tral_toggle_button"].destroy()
-    log2("Deleting old alert window.")
+    log2("Deleting old toggle button.")
   end
 end
 

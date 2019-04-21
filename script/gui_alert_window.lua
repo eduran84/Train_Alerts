@@ -1,6 +1,6 @@
 -- load modules
 local mod_gui = require("mod-gui")
-local EUI_Frame = require("script.eui.EUI_Frame")
+local EGM_Frame = require("script.EGM.frame")
 
 --localize functions and variables
 local pairs, log2 = pairs, log2
@@ -11,80 +11,97 @@ local WIDTH = defs.constants.button_inner_width
 
 local tsm
 local data = {
-  [element_names.main_frame] = {},
+  viewing_players = {},
+  alert_frames = {},
+  alert_tables = {},
   show_on_alert = {},
   active_alert_count = 0,
 }
 
 -- private UI functions
-local function get_frame(pind)
-  local frame_flow = mod_gui.get_frame_flow(game.players[pind])
-  local frame_obj = data[element_names.main_frame][pind]
-  if frame_obj and frame_obj:is_valid() then
-    return frame_obj
-  else
-    if debug_log then log2("Creating GUI for player", game.players[pind].name) end
-    if frame_obj then frame_obj:destroy() end
-    frame_obj = EUI_Frame.build{
-      parent = frame_flow,
+local function build_frame(pind)
+  local player = game.players[pind]
+  if debug_mode then log2("Creating Alert window for player", player.name) end
+  local frame = EGM_Frame.build(
+    mod_gui.get_frame_flow(player),
+    {
       caption = {"tral.frame-caption"},
       direction = "vertical",
       style = "tral_transparent_frame",
     }
-    frame_obj:style().maximal_height = settings.get_player_settings(game.players[pind])["tral-window-height"].value
-    frame_obj:add_title_button({
-      type = "sprite-button",
-      style = "tral_title_button",
-      tooltip = {"tral.help-button-tt"},
-      sprite = names.gui.sprites.questionmark_white,
-      name = element_names.help_button,
-    })
-    frame_obj:add_title_button({
-      type = "sprite-button",
-      style = "tral_title_button",
-      tooltip = {"tral.ignore-button-tt"},
-      sprite = names.gui.sprites.ignore_white,
-      name = element_names.ignore_button,
-    })
+  )
+  frame.style.maximal_height = settings.get_player_settings(player)["tral-window-height"].value
+  EGM_Frame.add_button(frame, {
+    type = "sprite-button",
+    style = "tral_title_button",
+    tooltip = {"tral.help-button-tt"},
+    sprite = names.gui.sprites.questionmark_white,
+    name = element_names.help_button,
+  })
+  EGM_Frame.add_button(frame, {
+    type = "sprite-button",
+    style = "tral_title_button",
+    tooltip = {"tral.ignore-button-tt"},
+    sprite = names.gui.sprites.ignore_white,
+    name = element_names.ignore_button,
+  })
+  data.alert_frames[pind] = frame
+  frame.visible = false
 
-    local tbl = frame_obj:add{type = "table", column_count = 3}
-    for i = 1, 3 do
-      local label = tbl.add{
-        type = "label",
-        style = "caption_label",
-        caption = {"tral.col-header-"..i}
-      }
-      label.style.width = WIDTH[i]
-    end
-    frame_obj:add{
-      type = "scroll-pane",
-      vertical_scroll_policy = "auto",
-      horizontal_scroll_policy = "never",
-      name = element_names.main_pane
-    }.add{type = "table", name = element_names.main_table, column_count = 1}
-    frame_obj:hide()
-    data[element_names.main_frame][pind] = frame_obj
-    return frame_obj
+  local tbl = EGM_Frame.add_element(frame, {type = "table", column_count = 3})
+  for i = 1, 3 do
+    local label = tbl.add{
+      type = "label",
+      style = "caption_label",
+      caption = {"tral.col-header-"..i}
+    }
+    label.style.width = WIDTH[i]
+  end
+
+  data.alert_tables[pind] = (EGM_Frame.add_element(frame, {
+    type = "scroll-pane",
+    vertical_scroll_policy = "auto",
+    horizontal_scroll_policy = "never",
+  }).add{type = "table", column_count = 1})
+  return frame
+end
+
+local function get_frame(pind)
+  local frame = data.alert_frames[pind]
+  if frame and frame.valid then
+    return frame
+  else
+    return build_frame(pind)
   end
 end
 
 local function get_table(pind)
-  local frame_obj = get_frame(pind)
-  return frame_obj.container[element_names.main_pane]
-      and frame_obj.container[element_names.main_pane][element_names.main_table]
+  local table = data.alert_tables[pind]
+  if table and table.valid then
+    return table
+  else
+    build_frame(pind)
+    return data.alert_tables[pind]
+  end
 end
 
 local function show(pind)
-  get_frame(pind):show()
-  game.players[pind].set_shortcut_toggled(
-    toggle_shortcut_name,
-    true
-  )
+  get_frame(pind).visible = true
+  data.viewing_players[pind] = true
+  game.players[pind].set_shortcut_toggled(toggle_shortcut_name, true)
 end
 
 local function hide(pind)
-  get_frame(pind):hide()
+  get_frame(pind).visible = false
+  data.viewing_players[pind] = nil
   game.players[pind].set_shortcut_toggled(toggle_shortcut_name, false)
+end
+
+local function toggle(pind)
+  local frame = get_frame(pind)
+  frame.visible = not frame.visible
+  data.viewing_players[pind] = frame.visible or nil
+  return frame.visible
 end
 
 local add_row
@@ -93,7 +110,7 @@ do
   local button_definition = {
     type = "button",
     style = "tral_button_row",
-    name = "tral_trainbt_a",
+    name = element_names.train_button,
     tooltip = {"tral.button-tooltip"},
   }
   local label_definitions = {
@@ -105,7 +122,7 @@ do
 
   add_row = function(event)
     local train_id = event.train_id
-    button_definition.name = "tral_trainbt_a" .. train_id
+    button_definition.name = element_names.train_button .. train_id
     label_definitions[1].caption = tostring(train_id)
     label_definitions[2].caption = event.state
     label_definitions[3].caption = event.time
@@ -123,7 +140,7 @@ end
 local function delete_row(train_id)
   data.active_alert_count = data.active_alert_count - 1
   for pind in pairs(game.players) do
-    local button = get_table(pind)["tral_trainbt_a" .. train_id]
+    local button = get_table(pind)[element_names.train_button .. train_id]
     if button and button.valid then
       button.destroy()
     end
@@ -133,17 +150,14 @@ local function delete_row(train_id)
   end
 end
 
-local function update_time(train_id, new_time)
-  for pind in pairs(game.players) do
-    local button = get_table(pind)["tral_trainbt_a" .. train_id]
-    button.children[1].children[3].caption = new_time
-  end
-end
-
-local function update_state(train_id, new_state)
-  for pind in pairs(game.players) do
-    local button = get_table(pind)["tral_trainbt_a" .. train_id]
-    button.children[1].children[2].caption = new_state
+local function update_button(event)
+  for pind in pairs(data.viewing_players) do
+    local button = get_table(pind)[element_names.train_button .. event.train_id].children[1]
+    if event.name == "time" then
+      button.children[3].caption = event.new_value
+    else
+      button.children[2].caption = event.new_value
+    end
   end
 end
 
@@ -154,55 +168,57 @@ end
 }
 local open_train_gui = require("__OpteraLib__.script.train").open_train_gui
 local match, tonumber = string.match, tonumber
+local raise_internal_event = raise_internal_event
 local function on_gui_input(event)
   if event.element and event.element.name then
-    if debug_log then log2("on_gui_click event received:", event) end
-    if handler[event.element.name] then
-      handler[event.element.name](event)
+    local name = event.element.name
+    if debug_mode then log2("on_gui_click event received:", event) end
+
+    if handler[name] then
+      handler[name](event)
     else
       -- train buttons
-      local type, train_id = match(event.element.name, "tral_trainbt_([ai])(%d+)")
-      train_id = tonumber(train_id)
+      local train_id = tonumber(match(name, element_names.train_button .."(%d+)"))
       if train_id then
-        if type == "a" then  -- click on train in alert list
-          if event.button == 2 and tsm.monitored_trains[train_id] then
-            if false then --event.shift then
-              -- Shift + LMB -> add train to ignore list
-              ui_settings.add_train_to_list(
-                event,
-                train_id,
-                tsm.monitored_trains[train_id].train,
-                monitor_states
-              )
-              force_state_check(tsm.monitored_trains[train_id].train)
-            else
-              -- LMB -> open train UI
-              open_train_gui(event.player_index, tsm.monitored_trains[train_id].train)
-            end
+        if event.button == 2 and tsm.monitored_trains[train_id] then
+          if false then --event.shift then
+            -- Shift + LMB -> add train to ignore list
+            ui_settings.add_train_to_list(
+              event,
+              train_id,
+              tsm.monitored_trains[train_id].train,
+              monitor_states
+            )
+            force_state_check(tsm.monitored_trains[train_id].train)
           else
-            -- RMB -> remove train from list
-            --stop_monitoring(train_id)
+            -- LMB -> open train UI
+            open_train_gui(event.player_index, tsm.monitored_trains[train_id].train)
           end
+        else
+          -- RMB -> remove train from list
+          raise_internal_event(defs.events.on_alert_removed, train_id)
         end
       end
     end
   end
 end
 
+
+
 local function on_toggle_hotkey(event)
-  if debug_log then log2("Toggle hotkey pressed. Event data:", event) end
+  if debug_mode then log2("Toggle hotkey pressed. Event data:", event) end
   game.players[event.player_index].set_shortcut_toggled(
     toggle_shortcut_name,
-    get_frame(event.player_index):toggle()
+    toggle(event.player_index)
   )
 end
 
 local function on_toggle_shortcut(event)
-  if debug_log then log2("Toggle shortcut pressed. Event data:", event) end
+  if debug_mode then log2("Toggle shortcut pressed. Event data:", event) end
   if event.prototype_name == toggle_shortcut_name then
     game.players[event.player_index].set_shortcut_toggled(
       toggle_shortcut_name,
-      get_frame(event.player_index):toggle()
+      toggle(event.player_index)
     )
   end
 end
@@ -223,7 +239,7 @@ local events =
 local internal_events =
 {
   [defs.events.on_new_alert] = add_row,
-  [defs.events.on_state_updated] = update_state,
+  [defs.events.on_state_updated] = update_button,
   [defs.events.on_alert_expired] = delete_row,
 }
 -- public module API
@@ -240,9 +256,6 @@ end
 function gui_alert_window.on_load()
   data = global.gui_alert_window
   tsm = global.train_state_monitor
-  for pind, frame_obj in pairs(data[element_names.main_frame]) do
-    EUI_Frame.restore_mt(frame_obj)
-  end
 end
 
 function gui_alert_window.get_events()

@@ -11,8 +11,7 @@ local trains_per_tick = defs.constants.trains_per_tick
 local train_state_dict = defs.dicts.train_state
 local ok_states, monitor_states
 
-local data =
-{
+local data = {
   ltn_stops = nil,
   active_alerts = {},
   monitored_trains = {},
@@ -23,7 +22,7 @@ local data =
 
 local function stop_monitoring(train_id)
   if data.active_alerts[train_id] then
-    --ui.delete_row(train_id)
+    raise_internal_event(defs.events.on_alert_expired, train_id)
     data.active_alerts[train_id] = nil
     Queue.remove_value(data.update_queue, train_id)
   end
@@ -60,7 +59,14 @@ end
 local function update_monitored_train(train_id, new_state, timeout)
   data.monitored_trains[train_id].state = new_state
   if data.active_alerts[train_id] then
-    --ui.update_state(train_id, new_state)
+    raise_internal_event(
+      defs.events.on_state_updated,
+      {
+        name = "state",
+        train_id = train_id,
+        new_value = train_state_dict[new_state],
+      }
+    )
   else
     -- recalculate alert time
     Queue.remove_value(data.alert_queue, train_id)
@@ -158,7 +164,6 @@ local function on_tick(event)
           time = ticks_to_timestring(event.tick - train_data.start_time)
         }
       )
-      --ui.add_row
     else
       stop_monitoring(train_id)
     end
@@ -168,7 +173,14 @@ local function on_tick(event)
   if train_id and data.active_alerts[train_id] then
     local train_data = data.monitored_trains[train_id]
     if train_data.train.valid then
-      --ui.update_time(train_id, ticks_to_timestring(event.tick - train_data.start_time))
+      raise_internal_event(
+        defs.events.on_state_updated,
+        {
+          name = "time",
+          train_id = train_id,
+          new_value = ticks_to_timestring(event.tick - train_data.start_time),
+        }
+      )
       insert(data.update_queue, event.tick + update_interval, train_id)
     else
       stop_monitoring(train_id)
@@ -239,7 +251,10 @@ local events =
   [defines.events.on_tick] = on_tick,
   [defines.events.on_runtime_mod_setting_changed] = on_settings_changed,
 }
-
+local internal_events =
+{
+  [defs.events.on_alert_removed] = stop_monitoring,
+}
 -- public module API
 local train_state_monitor = {}
 
@@ -258,7 +273,7 @@ function train_state_monitor.get_events()
 end
 
 function train_state_monitor.get_internal_events()
-  return {}
+  return internal_events
 end
 
 function train_state_monitor.on_configuration_changed(data)

@@ -17,7 +17,6 @@ defs.names.gui.frame = {
   title_flow = "eui-frm/header_flow",
   title = "eui-frm/title",
 }
-defs.names.gui.main_frame = "tral-frame"
 
 defs.names.gui.table = {
   outer_flow = "eui-tbl/outer-flow",
@@ -33,9 +32,8 @@ defs.names.gui.sprites = {
 }
 
 defs.names.gui.elements = {
-  main_frame = "tral-frame",
-  main_table = "tral_table",
-  main_pane = "tral-scroll",
+  train_button = "tral_train_button_",
+
   ignore_button = "tral-ignore-button",
   help_button = "tral-help-button",
 
