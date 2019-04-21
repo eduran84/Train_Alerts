@@ -3,6 +3,7 @@ local mod_gui = require("mod-gui")
 local EGM_Frame = require(defs.pathes.modules.EGM_Frame)
 --localize functions and variables
 local pairs, log2 = pairs, log2
+local register_ui, unregister_ui = util.register_ui, util.unregister_ui
 local names = defs.names
 local element_names = names.gui.elements
 local toggle_shortcut_name = names.controls.toggle_shortcut
@@ -31,25 +32,23 @@ local function build_frame(pind)
     }
   )
   frame.style.maximal_height = settings.get_player_settings(player)[names.settings.window_height].value
-  util.register_ui(
+  register_ui(
     data.ui_elements,
     EGM_Frame.add_button(frame, {
       type = "sprite-button",
       style = "tral_title_button",
       tooltip = {"tral.help-button-tt"},
       sprite = names.gui.sprites.questionmark_white,
-      --name = element_names.help_button,
     }),
     {name = "show_help"}
   )
-  util.register_ui(
+  register_ui(
     data.ui_elements,
     EGM_Frame.add_button(frame, {
       type = "sprite-button",
       style = "tral_title_button",
       tooltip = {"tral.ignore-button-tt"},
       sprite = names.gui.sprites.ignore_white,
-      --name = element_names.ignore_button,
     }),
     {name = "open_settings"}
   )
@@ -136,7 +135,13 @@ do
     label_definitions[3].caption = event.time
     data.active_alert_count = data.active_alert_count + 1
     for pind in pairs(game.players) do
-      local button = get_table(pind).add(button_definition).add(flow_definition)
+      local button = get_table(pind).add(button_definition)
+      register_ui(
+        data.ui_elements,
+        button,
+        {name = "train_button_clicked", train_id = train_id}
+      )
+      button = button.add(flow_definition)
       for i = 1, 3 do
         button.add(label_definitions[i])
       end
@@ -150,6 +155,7 @@ local function delete_row(train_id)
   for pind in pairs(game.players) do
     local button = get_table(pind)[element_names.train_button .. train_id]
     if button and button.valid then
+      unregister_ui(data.ui_elements, button)
       button.destroy()
     end
     if data.active_alert_count == 0 and data.show_on_alert[pind] then
@@ -160,11 +166,15 @@ end
 
 local function update_button(event)
   for pind in pairs(data.viewing_players) do
-    local button = get_table(pind)[element_names.train_button .. event.train_id].children[1]
-    if event.name == "time" then
-      button.children[3].caption = event.new_value
+    local button = get_table(pind)[element_names.train_button .. event.train_id]
+    if button and button.valid then
+      if event.name == "time" then
+        button.children[1].children[3].caption = event.time
+      else
+        button.children[1].children[2].caption = event.state
+      end
     else
-      button.children[2].caption = event.new_value
+      add_row(event)
     end
   end
 end
@@ -173,61 +183,43 @@ local open_train_gui = util.train.open_train_gui
 local match, tonumber = string.match, tonumber
 local raise_private_event = raise_private_event
 local gui_actions = {
-  open_settings = function(event, args)
+  open_settings = function(event, action)
     raise_private_event(defs.events.on_train_ignored, event)
-    }
-  )
+  end,
+  train_button_clicked = function(event, action)
+    local train_id = action.train_id
+    if event.button == 2 and tsm.monitored_trains[train_id] then
+      if event.shift then
+        -- Shift + LMB -> add train to ignore list
+        raise_private_event(
+          defs.events.on_train_ignored, {
+            player_index = event.player_index,
+            train_id = train_id,
+          }
+        )
+      else
+        -- LMB -> open train UI
+        open_train_gui(event.player_index, tsm.monitored_trains[train_id].train)
+      end
+    else
+      -- RMB -> remove train from list
+      raise_private_event(defs.events.on_alert_removed, train_id)
+    end
   end,
 }
 
-local on_gui_action = function(event)
+local on_gui_input = function(event)
   local element = event.element
   if not (element and element.valid) then return end
   local player_data = data.ui_elements[event.player_index]
   if not player_data then return end
+  if debug_mode then log2("event:", event, "\nplayer data:", player_data) end
   local action = player_data[element.index]
   if action then
     gui_actions[action.name](event, action)
     return true
   end
 end
-
-local function on_gui_input(event)
-  if event.element and event.element.name then
-    local name = event.element.name
-    on_gui_action(event)
-    if debug_mode then log2("on_gui_click event received:", event) end
-
-    if handler[name] then
-      handler[name](event)
-    else
-      -- train buttons
-      local train_id = tonumber(match(name, element_names.train_button .."(%d+)"))
-      if train_id then
-        if event.button == 2 and tsm.monitored_trains[train_id] then
-          if event.shift then
-            -- Shift + LMB -> add train to ignore list
-            raise_private_event(
-              defs.events.on_train_ignored, {
-                player_index = event.player_index,
-                train_id = train_id,
-              }
-            )
-            --force_state_check(tsm.monitored_trains[train_id].train)
-          else
-            -- LMB -> open train UI
-            open_train_gui(event.player_index, tsm.monitored_trains[train_id].train)
-          end
-        else
-          -- RMB -> remove train from list
-          raise_private_event(defs.events.on_alert_removed, train_id)
-        end
-      end
-    end
-  end
-end
-
-
 
 local function on_toggle_hotkey(event)
   if debug_mode then log2("Toggle hotkey pressed. Event data:", event) end

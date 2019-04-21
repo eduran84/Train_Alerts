@@ -4,10 +4,9 @@ local EGM_Frame = require(defs.pathes.modules.EGM_Frame)
 local EGM_Table = require(defs.pathes.modules.EGM_Table)
 --localize functions and variables
 local pairs, log2 = pairs, log2
+local register_ui, unregister_ui = util.register_ui, util.unregister_ui
 local names = defs.names
 local element_names = names.gui.elements
-local toggle_shortcut_name = names.controls.toggle_shortcut
-local WIDTH = defs.constants.button_inner_width
 
 local tsm
 local data = {
@@ -28,12 +27,15 @@ local function build_frame(pind)
       direction = "vertical",
     }
   )
-  EGM_Frame.add_button(frame, {
-    type = "sprite-button",
-    style = "tral_title_button",
-    sprite = "utility/close_white",
-    name = element_names.close_button,
-  })
+  register_ui(
+    data.ui_elements,
+    EGM_Frame.add_button(frame, {
+      type = "sprite-button",
+      style = "tral_title_button",
+      sprite = "utility/close_white",
+    }),
+    {name = "close_window"}
+  )
   frame.visible = false
 
   local headers = {[1] = {type = "label", style = "caption_label", caption = {"tral.settings-col-header-1"}}}
@@ -67,7 +69,6 @@ local function reset(pind)
   data.frames[pind], data.tables[pind] = build_frame(pind)
 end
 
-
 local function get_frame(pind)
   local frame = data.frames[pind]
   if frame and frame.valid then return frame end
@@ -90,9 +91,11 @@ end
 
 local add_train_to_list
 do
-  local cell_def = {[1] = {type = "label", style = "hoverable_bold_label", name = "tral_trainbt_i"}}
+  local cell_def = {[1] = {type = "label", style = "hoverable_bold_label", name = "tral_trainlabel_"}}
+  local action_def = {[1] = {name = "train_label_clicked", train_id = 0}}
   for i = 2, 6 do
-    cell_def[i] = {type = "text-box", style = "short_number_textfield"}
+    cell_def[i] = {type = "text-box", style = "short_number_textfield", name = "0"}
+    action_def[i] = {name = "text_changed", train_id = 0, column = i}
   end
   local i2state = {
     defines.train_state.wait_signal,
@@ -104,9 +107,10 @@ do
   --local monitor_states = shared.train_state_monitor.monitor_states
   add_train_to_list =  function(event)
     local train_id = event.train_id
-    if not(tsm.ignored_trains[train_id]) then
+    if train_id and not(tsm.ignored_trains[train_id]) then
       cell_def[1].caption = train_id
-      cell_def[1].name = "tral_trainbt_i" .. train_id
+      cell_def[1].name = "tral_trainlabel_" .. train_id
+      action_def[1].train_id = train_id
       tsm.ignored_trains[train_id] = {
         train = tsm.monitored_trains[train_id].train,
         ["ok_states"] = {
@@ -120,9 +124,13 @@ do
         local timeout = monitor_states[i2state[i]]
         cell_def[i].text = timeout and (timeout - 2) / 60 or -1
         cell_def[i].name = train_id .. "_" .. i
+        action_def[i].train_id = train_id
       end
       for pind in pairs(game.players) do
-        EGM_Table.add_cells(get_table(pind), cell_def)
+        local tbl_add = get_table(pind).add
+        for i, cell in pairs(cell_def) do
+          register_ui(data.ui_elements, tbl_add(cell), action_def[i])
+        end
       end
     end
     open(event.player_index)
@@ -133,10 +141,43 @@ local function remove_train_from_list(event, train_id)
   tsm.ignored_trains[train_id] = nil
   for pind in pairs(game.players) do
     local tbl = get_table(pind)
-    tbl["tral_trainbt_i" .. train_id].destroy()
+    local elem = tbl["tral_trainlabel_" .. train_id]
+    unregister_ui(data.ui_elements, elem)
+    elem.destroy()
     for i = 2, 6 do
-      tbl[train_id .. "_" .. i].destroy()
+      elem = tbl[train_id .. "_" .. i]
+      unregister_ui(data.ui_elements, elem)
+      elem.destroy()
     end
+  end
+end
+
+
+local gui_actions = {
+  close_window = function(event, action)
+    get_frame(event.player_index).visible = false
+  end,
+  train_label_clicked = function(event, action)
+    local train_id = action.train_id
+    if event.button == 2 and tsm.ignored_trains[train_id] then --LMB
+      util.train.open_train_gui(event.player_index, tsm.ignored_trains[train_id].train)
+    else
+      remove_train_from_list(event, train_id)
+    end
+  end,
+
+}
+
+local on_gui_input = function(event)
+  local element = event.element
+  if not (element and element.valid) then return end
+  local player_data = data.ui_elements[event.player_index]
+  if not player_data then return end
+  if debug_mode then log2("on_gui_click event received:", event) end
+  local action = player_data[element.index]
+  if action then
+    gui_actions[action.name](event, action)
+    return true
   end
 end
 
@@ -148,7 +189,7 @@ end
 
 local events =
 {
-  [defines.events.on_gui_click] = nil,
+  [defines.events.on_gui_click] = on_gui_input,
   [defines.events.on_player_created] = nil,
   [defines.events.on_gui_closed] = on_gui_closed
 }

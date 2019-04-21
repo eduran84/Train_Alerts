@@ -1,6 +1,7 @@
 defs = require("defines")
-util = require("script.util")
+util = require("script.my_util")
 logger = require(defs.pathes.modules.logger)
+logger.settings.class_dictionary.LuaGuiElement.index = true
 log2 = logger.log
 print = logger.print
 
@@ -10,7 +11,8 @@ shared = {}
 commands.add_command("reset", "",
   function(event)
     game.players[event.player_index].gui.left.clear()
-    global.gui_alert_window[defs.names.elements.main_frame] = {}
+    game.players[event.player_index].gui.center.clear()
+    log2(global.gui_alert_window.ui_elements)
   end
 )
 

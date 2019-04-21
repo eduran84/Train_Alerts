@@ -61,14 +61,16 @@ local function start_monitoring(train_id, new_state, timeout, train)
 end
 
 local function update_monitored_train(train_id, new_state, timeout)
-  data.monitored_trains[train_id].state = new_state
+  local train_data = data.monitored_trains[train_id]
+  train_data.state = new_state
   if data.active_alerts[train_id] then
     raise_private_event(
       defs.events.on_state_updated,
       {
         name = "state",
         train_id = train_id,
-        new_value = train_state_dict[new_state],
+        state = train_state_dict[new_state],
+        time = ticks_to_timestring(game.tick - train_data.start_time)
       }
     )
   else
@@ -76,7 +78,7 @@ local function update_monitored_train(train_id, new_state, timeout)
     Queue.remove_value(data.alert_queue, train_id)
     insert(
       data.alert_queue,
-      max(data.monitored_trains[train_id].start_time + timeout, game.tick+2),
+      max(train_data.start_time + timeout, game.tick+2),
       train_id
     )
   end
@@ -165,7 +167,7 @@ local function on_tick(event)
         {
           train_id = train_id,
           state = train_state_dict[train_data.state],
-          time = ticks_to_timestring(event.tick - train_data.start_time)
+          time = ticks_to_timestring(event.tick - train_data.start_time),
         }
       )
     else
@@ -182,7 +184,8 @@ local function on_tick(event)
         {
           name = "time",
           train_id = train_id,
-          new_value = ticks_to_timestring(event.tick - train_data.start_time),
+          state = train_state_dict[train_data.state],
+          time = ticks_to_timestring(event.tick - train_data.start_time),
         }
       )
       insert(data.update_queue, event.tick + update_interval, train_id)

@@ -10,7 +10,7 @@ global.gui_alert_window = {
   alert_tables = {},
   show_on_alert = {},
   active_alert_count = 0,
-  ui_actions = {}
+  ui_elements = {}
 }
 
 global.train_state_monitor = {
@@ -26,6 +26,7 @@ global.gui_settings_window = {
   viewing_players = {},
   frames = {},
   tables = {},
+  ui_elements = {},
 }
 log2("Resetting global table.")
 

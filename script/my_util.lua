@@ -3,17 +3,17 @@ util.misc = require(defs.pathes.modules.OL_misc)
 util.train = require(defs.pathes.modules.OL_train)
 
 local pairs = pairs
-local function unregister_gui_private(gui_element, data)
+local function unregister_ui_private(data, gui_element)
   data[gui_element.index] = nil
   for k, child in pairs (gui_element.children) do
-    unregister_gui_private(child, data)
+    unregister_ui_private(data, child)
   end
 end
 
-function util.unregister_gui(gui_element, data)
+function util.unregister_ui(data, gui_element)
   local player_data = data[gui_element.player_index]
   if not player_data then return end
-  unregister_gui_private(gui_element, player_data)
+  unregister_ui_private(player_data, gui_element)
 end
 
 function util.register_ui(data, gui_element, action)
