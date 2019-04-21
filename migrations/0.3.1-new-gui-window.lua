@@ -20,6 +20,12 @@ global.train_state_monitor = {
   update_queue = Queue.new(),
   alert_queue = Queue.new(),
 }
+
+global.gui_settings_window = {
+  viewing_players = {},
+  frames = {},
+  tables = {},
+}
 log2("Resetting global table.")
 
 -- Wipe old UI

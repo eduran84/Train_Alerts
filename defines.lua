@@ -69,6 +69,7 @@ defs.events = {
   on_state_updated = 2,
   on_alert_expired = 3,
   on_alert_removed = 10,
+  on_train_ignored = 20,
 }
 
 
@@ -82,7 +83,11 @@ defs.pathes.sprites = {
   questionmark_white = sprite_path_icon .. "questionmark_white.png",
   ignore_white = sprite_path_icon .. "ignore_white.png",
 }
-defs.pathes.modules = {queue = "script.queue"}
+defs.pathes.modules = {
+  queue = "script.queue",
+  EGM_Frame = "script.EGM.frame",
+  EGM_Table = "script.EGM.table",
+}
 
 
 defs.constants.trains_per_tick = 15

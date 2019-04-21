@@ -4,6 +4,7 @@ logger = require("__OpteraLib__.script.logger")
 log2 = logger.log
 print = logger.print
 
+shared = {}
 
 -- for debugging, to simulate UI elements becoming invalid
 commands.add_command("reset", "",
@@ -24,7 +25,7 @@ end
 local modules = {
   train_state_monitor = require("script/train_state_monitor"),
   alert_window = require("script/gui_alert_window"),
-  --settings_window = require("script/gui_settings_window"),
+  settings_window = require("script/gui_settings_window"),
 }
 
 local function on_settings_changed(event)

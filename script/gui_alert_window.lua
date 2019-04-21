@@ -1,7 +1,6 @@
 -- load modules
 local mod_gui = require("mod-gui")
-local EGM_Frame = require("script.EGM.frame")
-
+local EGM_Frame = require(defs.pathes.modules.EGM_Frame)
 --localize functions and variables
 local pairs, log2 = pairs, log2
 local names = defs.names
@@ -181,15 +180,15 @@ local function on_gui_input(event)
       local train_id = tonumber(match(name, element_names.train_button .."(%d+)"))
       if train_id then
         if event.button == 2 and tsm.monitored_trains[train_id] then
-          if false then --event.shift then
+          if event.shift then
             -- Shift + LMB -> add train to ignore list
-            ui_settings.add_train_to_list(
-              event,
-              train_id,
-              tsm.monitored_trains[train_id].train,
-              monitor_states
+            raise_internal_event(
+              defs.events.on_train_ignored, {
+                player_index = event.player_index,
+                train_id = train_id,
+              }
             )
-            force_state_check(tsm.monitored_trains[train_id].train)
+            --force_state_check(tsm.monitored_trains[train_id].train)
           else
             -- LMB -> open train UI
             open_train_gui(event.player_index, tsm.monitored_trains[train_id].train)
@@ -202,8 +201,6 @@ local function on_gui_input(event)
     end
   end
 end
-
-
 
 local function on_toggle_hotkey(event)
   if debug_mode then log2("Toggle hotkey pressed. Event data:", event) end

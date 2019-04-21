@@ -24,6 +24,12 @@ function EGM_Frame.build(parent, args)
   return frame
 end
 
+function EGM_Frame.get_flow(frame)
+  if frame and frame.valid then
+    return frame.children[1].children[2]
+  end
+end
+
 function EGM_Frame.add_button(frame, button_args)
   if frame and frame.valid then
     return frame.children[1].children[1].add(button_args)

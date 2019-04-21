@@ -19,6 +19,10 @@ local data = {
   update_queue = Queue.new(),
   alert_queue = Queue.new(),
 }
+shared.train_state_monitor = {
+  monitor_states = {},
+  ok_states = {},
+}
 
 local function stop_monitoring(train_id)
   if data.active_alerts[train_id] then
@@ -233,6 +237,8 @@ local function update_timeouts()
     ok_states[train_state.manual_control] = true
     ok_states[train_state.manual_control_stop] = true
   end
+  shared.train_state_monitor.ok_states = ok_states
+  shared.train_state_monitor.monitor_states = monitor_states
 end
 
 local function on_settings_changed(event)
