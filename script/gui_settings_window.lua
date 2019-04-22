@@ -1,7 +1,7 @@
 -- load modules
 local mod_gui = require("mod-gui")
 local EGM_Frame = require(defs.pathes.modules.EGM_Frame)
-local EGM_Table = require(defs.pathes.modules.EGM_Table)
+local styles = defs.names.styles
 --localize functions and variables
 local pairs, log2 = pairs, log2
 local register_ui, unregister_ui = util.register_ui, util.unregister_ui
@@ -13,6 +13,7 @@ local data = {
   viewing_players = {},
   frames = {},
   tables = {},
+  table_rows = {},
 }
 
 local function build_frame(pind)
@@ -31,14 +32,19 @@ local function build_frame(pind)
     data.ui_elements,
     EGM_Frame.add_button(frame, {
       type = "sprite-button",
-      style = "tral_title_button",
+      style = styles.title_button,
       sprite = "utility/close_white",
     }),
     {name = "close_window"}
   )
   frame.visible = false
+  local flow = EGM_Frame.get_flow(frame)
 
-  local headers = {[1] = {type = "label", style = "caption_label", caption = {"tral.settings-col-header-1"}}}
+  local header_frame = flow.add{
+    type = "frame",
+    style = styles.table_header_frame,
+  }
+
   local spritelist = {
     [2] = "item/rail-signal",
     [3] = "item/train-stop",
@@ -46,20 +52,25 @@ local function build_frame(pind)
     [5] = "utility/show_player_names_in_map_view",
     [6] = "utility/questionmark",
   }
+
+  header_frame.add {type = "label", style = "caption_label", caption = {"tral.settings-col-header-1"}}
+  header_frame.style.vertical_align = "center"
   for i = 2, 6 do
-    headers[i] = {
+    header_frame.add{
       type = "sprite",
       sprite = spritelist[i],
       tooltip = {"tral.settings-col-header-tt-"..i}
     }
   end
-  local table = EGM_Table.build(
-    EGM_Frame.get_flow(frame),
-    {
-      column_count = 6,
-      header_elements = headers,
-    }
-  )
+
+  local table = flow.add{
+    type = "frame",
+    style = styles.table_body_frame,
+  }.add{
+    type = "scroll-pane",
+    style = styles.table_pane,
+    vertical_scroll_policy = "auto-and-reserve-space"
+  }
   return frame, table
 end
 
@@ -91,9 +102,9 @@ end
 
 local add_train_to_list
 do
-  local cell_def = {[1] = {type = "label", style = "hoverable_bold_label", name = "tral_trainlabel_"}}
+  local cell_def = {[1] = {type = "label", style = styles.id_label, caption = ""}}
   for i = 2, 6 do
-    cell_def[i] = {type = "text-box", style = "short_number_textfield", name = "0"}
+    cell_def[i] = {type = "text-box", style = styles.textfield, text = ""}
   end
   local i2state = {
     defines.train_state.wait_signal,
@@ -106,28 +117,32 @@ do
   add_train_to_list =  function(event)
     local train_id = event.train_id
     if train_id and not(tsm.ignored_trains[train_id]) then
+      local monitor_states = shared.train_state_monitor.monitor_states
       local action_def = {[1] = {name = "train_label_clicked", train_id = train_id}}
       cell_def[1].caption = train_id
-      cell_def[1].name = "tral_trainlabel_" .. train_id
       tsm.ignored_trains[train_id] = {
         train = tsm.monitored_trains[train_id].train,
         ["ok_states"] = {
           [defines.train_state.wait_signal] = true,
           [defines.train_state.wait_station] = true,
         },
-        monitor_states = {},
+        monitor_states = monitor_states,
       }
-      local monitor_states = shared.train_state_monitor.monitor_states
       for i = 2, 6 do
         local timeout = monitor_states[i2state[i]]
         cell_def[i].text = timeout and (timeout - 2) / 60 or -1
-        cell_def[i].name = train_id .. "_" .. i
         action_def[i] = {name = "text_changed", train_id = train_id, column = i}
       end
+      local name = "ignore_row_" .. train_id
       for pind in pairs(game.players) do
-        local tbl_add = get_table(pind).add
+        local flow = get_table(pind).add{
+          type = "flow",
+          direction = "horizontal",
+          name = name, style = styles.table_row_flow
+        }
+        local flow_add = flow.add
         for i, cell in pairs(cell_def) do
-          register_ui(data.ui_elements, tbl_add(cell), action_def[i])
+          register_ui(data.ui_elements, flow_add(cell), action_def[i])
         end
       end
     end
@@ -139,14 +154,9 @@ local function remove_train_from_list(event, train_id)
   tsm.ignored_trains[train_id] = nil
   for pind in pairs(game.players) do
     local tbl = get_table(pind)
-    local elem = tbl["tral_trainlabel_" .. train_id]
+    local elem = tbl["ignore_row_" .. train_id]
     unregister_ui(data.ui_elements, elem)
     elem.destroy()
-    for i = 2, 6 do
-      elem = tbl[train_id .. "_" .. i]
-      unregister_ui(data.ui_elements, elem)
-      elem.destroy()
-    end
   end
 end
 

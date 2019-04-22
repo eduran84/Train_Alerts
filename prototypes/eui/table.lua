@@ -16,6 +16,8 @@ default[names.header_frame] = {
   type = "frame_style",
   horizontally_stretchable = "on",
   left_padding = 4,
+  direction = "horizontal",
+  vertical_align = "center",
 }
 default[names.body_frame] = {
   type = "frame_style",

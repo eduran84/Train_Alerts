@@ -21,12 +21,14 @@ defs.names.gui.frame = {
   title = "eui-frm/title",
 }
 
-defs.names.gui.table = {
-  outer_flow = "eui-tbl/outer-flow",
-  header_frame = "eui-tbl/header-frame",
-  body_frame = "eui-tbl/body-frame",
-  pane = "eui-tbl/pane",
-  table = "eui-tbl/table",
+defs.names.styles = {
+  title_button = mod_prefix .. "title_button",
+  table_header_frame = mod_prefix .. "tbl_header_frame",
+  table_body_frame = mod_prefix .. "tbl_body_frame",
+  table_pane = mod_prefix .. "tbl_pane",
+  table_row_flow =mod_prefix .. "tbl_row_flow",
+  id_label = mod_prefix .. "train_id_label",
+  textfield = "short_number_textfield"
 }
 
 defs.names.gui.sprites = {
@@ -101,6 +103,7 @@ defs.constants.trains_per_tick = 15
 defs.constants.button_inner_width = {50, 200, 50}
 defs.constants.button_outer_width = 325
 defs.constants.table_col_width = {100, 100, 100, 100, 100, 100}
+defs.constants.id_label_width = 100
 
 defs.dicts.train_state = {
   [defines.train_state.on_the_path] = {"train-states.on_the_path"},
