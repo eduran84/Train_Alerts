@@ -53,10 +53,10 @@ local function build_frame(pind)
     [6] = "utility/questionmark",
   }
 
-  header_frame.add {type = "label", style = "caption_label", caption = {"tral.settings-col-header-1"}}
+  header_frame.add {type = "label", style = "caption_label", caption = {"tral.settings-col-header-1"}}.style.width = 100
   header_frame.style.vertical_align = "center"
   for i = 2, 6 do
-    header_frame.add{
+    local icon = header_frame.add{type = "flow", style = styles.image_flow}.add{
       type = "sprite",
       sprite = spritelist[i],
       tooltip = {"tral.settings-col-header-tt-"..i}

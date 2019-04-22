@@ -3,6 +3,10 @@ default[style_names.table_header_frame] = {
   horizontally_stretchable = "on",
   left_padding = 4,
   direction = "horizontal",
+  horizontal_flow_style = {
+    type = "horizontal_flow_style",
+    vertical_align = "center"
+  },
   vertical_align = "center",
 }
 default[style_names.table_body_frame] = {
@@ -33,6 +37,13 @@ default[style_names.table_row_flow] = {
 default[style_names.table_row_flow] = {
   type = "horizontal_flow_style",
   vertical_align = "center"
+}
+
+default[style_names.image_flow] = {
+  type = "horizontal_flow_style",
+  horizontal_align = "center",
+  minimal_width = defs.constants.textfield_width,
+  maximal_width = defs.constants.textfield_width
 }
 
 default[style_names.id_label] = {

@@ -26,7 +26,8 @@ defs.names.styles = {
   table_header_frame = mod_prefix .. "tbl_header_frame",
   table_body_frame = mod_prefix .. "tbl_body_frame",
   table_pane = mod_prefix .. "tbl_pane",
-  table_row_flow =mod_prefix .. "tbl_row_flow",
+  table_row_flow = mod_prefix .. "tbl_row_flow",
+  image_flow = mod_prefix .. "image_flow",
   id_label = mod_prefix .. "train_id_label",
   textfield = "short_number_textfield"
 }
@@ -104,6 +105,7 @@ defs.constants.button_inner_width = {50, 200, 50}
 defs.constants.button_outer_width = 325
 defs.constants.table_col_width = {100, 100, 100, 100, 100, 100}
 defs.constants.id_label_width = 100
+defs.constants.textfield_width = 80
 
 defs.dicts.train_state = {
   [defines.train_state.on_the_path] = {"train-states.on_the_path"},
