@@ -22,9 +22,9 @@ data:extend({
 		name = names.refresh_interval,
 		setting_type = "runtime-global",
 		type = "int-setting",
-		default_value = 60,
-		minimum_value = 30,
-		maximum_value = 600,
+		default_value = 1,
+		minimum_value = 1,
+		maximum_value = 10,
     order = "a"
 	},
 	{

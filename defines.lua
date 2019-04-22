@@ -6,9 +6,11 @@ local defs = {
   constants = {},
   pathes = {},
 }
-local mod_prefix = "tral_"
 
--- EUI names
+local mod_prefix = "tral_"
+defs.names.mod_prefix = mod_prefix
+
+-- EGM names
 defs.names.gui.shared = {
   vertical_spacer = "eui-shr/vertical-spacer",
   horizontal_spacer = "eui-shr/horizontal-spacer",
@@ -51,17 +53,18 @@ defs.names.controls = {
 }
 
 
-local timeout_prefix = mod_prefix .. "timeout_"
+local tsm_prefix = mod_prefix .. "tsm_"
 defs.names.settings = {
+  tsm_prefix = tsm_prefix,
+  debug_mode = mod_prefix .. "debug_level",
   open_on_alert = mod_prefix .. "open_on_alert",
   window_height = mod_prefix .. "window_height",
-  refresh_interval = mod_prefix .. "refresh_interval",
-  debug_mode = mod_prefix .. "debug_level",
-  timeout_station = timeout_prefix .. "station",
-  timeout_signal = timeout_prefix .. "signal",
-  timeout_path = timeout_prefix .. "no-path",
-  timeout_schedule = timeout_prefix .. "no-schedule",
-  timeout_manual = timeout_prefix .. "manual",
+  refresh_interval = tsm_prefix .. "refresh_interval",
+  timeout_station = tsm_prefix .. "station",
+  timeout_signal = tsm_prefix .. "signal",
+  timeout_path = tsm_prefix .. "no_path",
+  timeout_schedule = tsm_prefix .. "no_schedule",
+  timeout_manual = tsm_prefix .. "manual",
 }
 
 defs.events = {

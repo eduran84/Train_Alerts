@@ -10,9 +10,11 @@ shared = {}
 -- for debugging, to simulate UI elements becoming invalid
 commands.add_command("reset", "",
   function(event)
-    game.players[event.player_index].gui.left.clear()
-    game.players[event.player_index].gui.center.clear()
-    log2(global.gui_alert_window.ui_elements)
+    if debug_mode then
+      game.players[event.player_index].gui.left.clear()
+      game.players[event.player_index].gui.center.clear()
+      log2(global.gui_alert_window.ui_elements)
+    end
   end
 )
 
@@ -30,7 +32,7 @@ local modules = {
 }
 
 local function on_settings_changed(event)
-  if event.setting and string.match(event.setting, "tral-") then
+  if event.setting and event.setting == defs.names.settings.debug_mode then
     debug_mode = settings.global[defs.names.settings.debug_mode].value
   end
 end

@@ -213,9 +213,9 @@ local on_gui_input = function(event)
   if not (element and element.valid) then return end
   local player_data = data.ui_elements[event.player_index]
   if not player_data then return end
-  if debug_mode then log2("event:", event, "\nplayer data:", player_data) end
   local action = player_data[element.index]
   if action then
+    if debug_mode then log2("event:", event, "\nplayer data:", player_data) end
     gui_actions[action.name](event, action)
     return true
   end
@@ -244,12 +244,32 @@ local function on_player_created(event)
   data.show_on_alert[pind] = settings.get_player_settings(game.players[pind])[names.settings.open_on_alert].value or nil
 end
 
+local function resize_window(event)
+  local pind = event.player_index
+  get_frame(pind).style.maximal_height = settings.get_player_settings(game.players[pind])[names.settings.window_height].value
+end
+
+local setting_actions = {
+  [defs.names.settings.open_on_alert] = on_player_created,
+  [defs.names.settings.window_height] = resize_window,
+}
+
+local function on_settings_changed(event)
+  if event.setting and string.match(event.setting, names.mod_prefix) then
+    if setting_actions[event.setting] then
+      setting_actions[event.setting](event)
+      log2("Mod settings changed by player", game.players[event.player_index].name, ".\nSetting changed event:", event)
+    end
+  end
+end
+
 local events =
 {
   [defines.events.on_gui_click] = on_gui_input,
   [names.controls.toggle_hotkey] = on_toggle_hotkey,
   [defines.events.on_lua_shortcut] = on_toggle_shortcut,
   [defines.events.on_player_created] = on_player_created,
+  [defines.events.on_runtime_mod_setting_changed] = on_settings_changed,
 }
 
 local private_events =

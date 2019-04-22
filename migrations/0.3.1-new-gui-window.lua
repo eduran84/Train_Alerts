@@ -14,7 +14,7 @@ global.gui_alert_window = {
 }
 
 global.train_state_monitor = {
-  ltn_stops = nil,
+  ltn_stops = {},
   active_alerts = {},
   monitored_trains = {},
   ignored_trains = {},

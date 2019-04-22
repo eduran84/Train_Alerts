@@ -92,10 +92,8 @@ end
 local add_train_to_list
 do
   local cell_def = {[1] = {type = "label", style = "hoverable_bold_label", name = "tral_trainlabel_"}}
-  local action_def = {[1] = {name = "train_label_clicked", train_id = 0}}
   for i = 2, 6 do
     cell_def[i] = {type = "text-box", style = "short_number_textfield", name = "0"}
-    action_def[i] = {name = "text_changed", train_id = 0, column = i}
   end
   local i2state = {
     defines.train_state.wait_signal,
@@ -108,9 +106,9 @@ do
   add_train_to_list =  function(event)
     local train_id = event.train_id
     if train_id and not(tsm.ignored_trains[train_id]) then
+      local action_def = {[1] = {name = "train_label_clicked", train_id = train_id}}
       cell_def[1].caption = train_id
       cell_def[1].name = "tral_trainlabel_" .. train_id
-      action_def[1].train_id = train_id
       tsm.ignored_trains[train_id] = {
         train = tsm.monitored_trains[train_id].train,
         ["ok_states"] = {
@@ -124,7 +122,7 @@ do
         local timeout = monitor_states[i2state[i]]
         cell_def[i].text = timeout and (timeout - 2) / 60 or -1
         cell_def[i].name = train_id .. "_" .. i
-        action_def[i].train_id = train_id
+        action_def[i] = {name = "text_changed", train_id = train_id, column = i}
       end
       for pind in pairs(game.players) do
         local tbl_add = get_table(pind).add
@@ -161,6 +159,8 @@ local gui_actions = {
     local train_id = action.train_id
     if event.button == 2 and tsm.ignored_trains[train_id] then --LMB
       util.train.open_train_gui(event.player_index, tsm.ignored_trains[train_id].train)
+      local frame = get_frame(event.player_index)
+      frame.visible = true
     else
       remove_train_from_list(event, train_id)
     end
@@ -173,17 +173,23 @@ local on_gui_input = function(event)
   if not (element and element.valid) then return end
   local player_data = data.ui_elements[event.player_index]
   if not player_data then return end
-  if debug_mode then log2("on_gui_click event received:", event) end
   local action = player_data[element.index]
   if action then
+    if debug_mode then log2("event:", event, "\nplayer data:", player_data) end
     gui_actions[action.name](event, action)
     return true
   end
 end
 
 local function on_gui_closed(event)
+  log2("on_gui_closed", event)
   if event.element and event.element.name == element_names.setting_frame then
     get_frame(event.player_index).visible = false
+  elseif event.entity and event.entity.type == "locomotive" then
+    local frame = get_frame(event.player_index)
+    if frame.visible then
+      game.players[event.player_index].opened = frame
+    end
   end
 end
 

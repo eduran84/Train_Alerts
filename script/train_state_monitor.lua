@@ -5,14 +5,14 @@ local pairs, max = pairs, math.max
 local ticks_to_timestring = util.misc.ticks_to_timestring
 local raise_private_event = raise_private_event
 
-local update_interval = settings.global[defs.names.settings.refresh_interval].value
+local update_interval = settings.global[defs.names.settings.refresh_interval].value * 60
 local wait_station_state = defines.train_state.wait_station
 local trains_per_tick = defs.constants.trains_per_tick
 local train_state_dict = defs.dicts.train_state
 local ok_states, monitor_states
 
 local data = {
-  ltn_stops = nil,
+  ltn_stops = {},
   active_alerts = {},
   monitored_trains = {},
   ignored_trains = {},
@@ -137,6 +137,9 @@ local function on_train_changed_state(event)
   elseif timeout and not data.ignored_trains[train_id] then
     start_monitoring(train_id, new_state, timeout, event.train)
   end
+  --if debug_mode then
+    --log2("Train changed state.\nOriginal event:", event, "\nparsed data: is_ok =", is_ok, ", timeout =", timeout, "\ntrain data:", data.monitored_trains[train_id])
+  --end
 end
 
 --[[ on_tick
@@ -195,6 +198,19 @@ local function on_tick(event)
   end
 end
 
+local function register_ltn_event()
+  if remote.interfaces["logistic-train-network"] and remote.interfaces["logistic-train-network"].on_stops_updated then
+    script.on_event(
+      remote.call("logistic-train-network", "on_stops_updated"),
+      function(event)
+        data.ltn_stops = event.logistic_train_stops
+      end
+    )
+    return true
+  end
+  return false
+end
+
 local function init_train_states()
   for _, surface in pairs(game.surfaces) do
     local trains = surface.get_trains()
@@ -212,7 +228,7 @@ local offset = 2
 local names = defs.names.settings
 local function update_timeouts()
   local set = settings.global
-  update_interval = set[names.refresh_interval].value
+  update_interval = set[names.refresh_interval].value * 60
   monitor_states = {}
   ok_states = {
     [train_state.on_the_path] = true,
@@ -245,11 +261,11 @@ local function update_timeouts()
 end
 
 local function on_settings_changed(event)
-    if event.setting and string.match(event.setting, "tral-timeout-") then
-      update_timeouts()
-      init_train_states()
-      log2("Mod settings changed by player", game.players[event.player_index].name, ".\nSetting changed event:", event, "\nUpdated state dicts:", monitor_states, ok_states)
-    end
+  if event.setting and string.match(event.setting, names.tsm_prefix) then
+    update_timeouts()
+    log2("Mod settings changed by player", game.players[event.player_index].name, ".\nSetting changed event:", event, "\nUpdated state dicts:", monitor_states, ok_states)
+    init_train_states()
+  end
 end
 
 local events =
@@ -268,11 +284,13 @@ local train_state_monitor = {}
 function train_state_monitor.on_init()
   global.train_state_monitor = global.train_state_monitor or data
   update_timeouts()
+  register_ltn_event()
 end
 
 function train_state_monitor.on_load()
   data = global.train_state_monitor
   update_timeouts()
+  register_ltn_event()
 end
 
 function train_state_monitor.get_events()
@@ -284,6 +302,11 @@ function train_state_monitor.get_private_events()
 end
 
 function train_state_monitor.on_configuration_changed(data)
+  if register_ltn_event() then
+    data.ltn_stops = data.ltn_stops or {}
+  else
+    data.ltn_stops = {}
+  end
 end
 
 return train_state_monitor
