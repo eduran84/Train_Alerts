@@ -9,7 +9,7 @@ local update_interval = settings.global[defs.names.settings.refresh_interval].va
 local wait_station_state = defines.train_state.wait_station
 local trains_per_tick = defs.constants.trains_per_tick
 local train_state_dict = defs.dicts.train_state
-local ok_states, monitor_states
+local timeout_values
 
 local data = {
   ltn_stops = {},
@@ -20,8 +20,7 @@ local data = {
   alert_queue = Queue.new(),
 }
 shared.train_state_monitor = {
-  monitor_states = {},
-  ok_states = {},
+  timeout_states = {}
 }
 
 local function stop_monitoring(train_id)
@@ -41,7 +40,7 @@ local function start_monitoring(train_id, new_state, timeout, train)
   --- add unmonitored train to monitor list
   if new_state == wait_station_state and
       data.ltn_stops and
-      monitor_states[wait_station_state] then
+      timeout_values[wait_station_state] >= 0 then
     -- dont trigger alert fors trains stopped at LTN depots
     local stop_id = train.station and train.station.unit_number
     if stop_id and data.ltn_stops[stop_id] and
@@ -87,21 +86,23 @@ local function update_monitored_train(train_id, new_state, timeout)
   end
 end
 
-local function full_state_check(train)
+local function full_state_check(event)
+  local train = event.train
   local train_id = train.id
   local new_state = train.state
-  local is_ok, timeout
-  if data.ignored_trains[train_id] then
-    is_ok = data.ignored_trains[train_id].ok_states[new_state]
-    timeout = data.ignored_trains[train_id].monitor_states[new_state]
+  local train_data = data.ignored_trains[train_id]
+  local timeout
+  if train_data and train_data.timeout_values then
+    timeout = train_data.timeout_values[new_state]
   else
-    is_ok = ok_states[new_state]
-    timeout = monitor_states[new_state]
+    timeout = timeout_values[new_state]
   end
+  log2("full state check:", event, "\ntrain data:", train_data, "new state:", new_state)
+  if not timeout then return end
   if data.monitored_trains[train_id] then
-    if is_ok then
+    if timeout == -1 then
       stop_monitoring(train_id)
-    elseif timeout then
+    else
       update_monitored_train(train_id, new_state, timeout)
     end
   elseif timeout then
@@ -119,22 +120,21 @@ end
 local function on_train_changed_state(event)
   local train_id = event.train.id
   local new_state = event.train.state
-  local is_ok, timeout
-  if data.ignored_trains[train_id] then
-    is_ok = data.ignored_trains[train_id].ok_states[new_state]
-    timeout = data.ignored_trains[train_id].monitor_states[new_state]
+  local timeout
+  if data.ignored_trains[train_id] and data.ignored_trains[train_id].timeout_values then
+    timeout = data.ignored_trains[train_id].timeout_values[new_state]
   else
-    is_ok = ok_states[new_state]
-    timeout = monitor_states[new_state]
+    timeout = timeout_values[new_state]
   end
+  if not timeout then return end
   if data.monitored_trains[train_id] then
     -- remove or update already monitored train
-    if is_ok then
+    if timeout == -1 then
       stop_monitoring(train_id)
-    elseif timeout and new_state ~= data.monitored_trains[train_id].state then
+    elseif new_state ~= data.monitored_trains[train_id].state then
       update_monitored_train(train_id, new_state, timeout)
     end
-  elseif timeout and not data.ignored_trains[train_id] then
+  else
     start_monitoring(train_id, new_state, timeout, event.train)
   end
   --if debug_mode then
@@ -224,46 +224,36 @@ local function init_train_states()
 end
 
 local train_state = defines.train_state
-local offset = 2
+local offset = defs.constants.timeout_offset
 local names = defs.names.settings
+local timout_names = {
+  [names.timeout_station] = train_state.wait_station,
+  [names.timeout_signal] = train_state.wait_signal,
+  [names.timeout_path] = train_state.no_path,
+  [names.timeout_schedule] = train_state.no_schedule,
+  [names.timeout_manual] = train_state.manual_control,
+}
 local function update_timeouts()
   local set = settings.global
   update_interval = set[names.refresh_interval].value * 60
-  monitor_states = {}
-  ok_states = {
-    [train_state.on_the_path] = true,
-    [train_state.arrive_station] = true,
+  timeout_values = {
+    [train_state.on_the_path] = -1,
+    [train_state.arrive_station] = -1
   }
-  if set[names.timeout_station].value >= 0 then
-    monitor_states[train_state.wait_station] = set[names.timeout_station].value * 60 + offset
-  else
-    ok_states[train_state.wait_station] = true
+  for setting_name, train_state in pairs(timout_names) do
+    local setting_value = set[setting_name].value
+    if setting_value ~= -1 then
+      setting_value = setting_value * 60 + offset
+    end
+    timeout_values[train_state] = setting_value
   end
-  if set[names.timeout_signal].value >= 0 then
-    monitor_states[train_state.wait_signal] = set[names.timeout_signal].value * 60 + offset
-  else
-    ok_states[train_state.wait_signal] = true
-  end
-  if set[names.timeout_path].value >= 0 then
-    monitor_states[train_state.no_path] = set[names.timeout_path].value * 60 + offset
-  end
-  if set[names.timeout_schedule].value >= 0 then
-    monitor_states[train_state.no_schedule] = set[names.timeout_schedule].value * 60 + offset
-  end
-  if set[names.timeout_manual].value >= 0 then
-    monitor_states[train_state.manual_control] = set[names.timeout_manual].value * 60 + offset
-  else
-    ok_states[train_state.manual_control] = true
-    ok_states[train_state.manual_control_stop] = true
-  end
-  shared.train_state_monitor.ok_states = ok_states
-  shared.train_state_monitor.monitor_states = monitor_states
+  shared.train_state_monitor.timeout_values = timeout_values
 end
 
 local function on_settings_changed(event)
   if event.setting and string.match(event.setting, names.tsm_prefix) then
     update_timeouts()
-    log2("Mod settings changed by player", game.players[event.player_index].name, ".\nSetting changed event:", event, "\nUpdated state dicts:", monitor_states, ok_states)
+    log2("Mod settings changed by player", game.players[event.player_index].name, ".\nSetting changed event:", event, "\nUpdated timeouts:",timeout_values)
     init_train_states()
   end
 end
@@ -277,6 +267,7 @@ local events =
 local private_events =
 {
   [defs.events.on_alert_removed] = stop_monitoring,
+  [defs.events.on_timeouts_modified] = full_state_check,
 }
 -- public module API
 local train_state_monitor = {}

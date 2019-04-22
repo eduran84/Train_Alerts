@@ -26,6 +26,7 @@ global.gui_settings_window = {
   viewing_players = {},
   frames = {},
   tables = {},
+  table_rows = {},
   ui_elements = {},
 }
 log2("Resetting global table.")

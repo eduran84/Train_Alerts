@@ -29,7 +29,8 @@ defs.names.styles = {
   table_row_flow = mod_prefix .. "tbl_row_flow",
   image_flow = mod_prefix .. "image_flow",
   id_label = mod_prefix .. "train_id_label",
-  textfield = "short_number_textfield"
+  textbox_valid = mod_prefix .. "textbox_valid",
+  textbox_invalid = mod_prefix .. "textbox_invalid",
 }
 
 defs.names.gui.sprites = {
@@ -75,13 +76,15 @@ defs.events = {
   on_state_updated = 2,
   on_alert_expired = 3,
   on_alert_removed = 10,
+  on_timeouts_modified = 11,
   on_train_ignored = 20,
 }
 
-
-local sprite_path_sc =  "__Train_Alerts__/graphics/shortcut/"
-local sprite_path_icon = "__Train_Alerts__/graphics/icons/"
+local tral_gfx_path = "__Train_Alerts__/graphics/"
+local sprite_path_sc =  tral_gfx_path .. "shortcut/"
+local sprite_path_icon = tral_gfx_path .. "icons/"
 defs.pathes.sprites = {
+  gui_spritesheet = tral_gfx_path .. "gui.png",
   shortcut_x32 = sprite_path_sc .. "x32.png",
   shortcut_x32_bw = sprite_path_sc .. "x32_bw.png",
   shortcut_x24 = sprite_path_sc .. "x24.png",
@@ -101,11 +104,12 @@ defs.pathes.modules = {
 
 
 defs.constants.trains_per_tick = 15
+defs.constants.timeout_offset = 2
 defs.constants.button_inner_width = {50, 200, 50}
 defs.constants.button_outer_width = 325
 defs.constants.table_col_width = {100, 100, 100, 100, 100, 100}
 defs.constants.id_label_width = 100
-defs.constants.textfield_width = 80
+defs.constants.textbox_width = 80
 
 defs.dicts.train_state = {
   [defines.train_state.on_the_path] = {"train-states.on_the_path"},
