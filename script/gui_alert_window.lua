@@ -80,7 +80,7 @@ local function reset(pind)
   local frame = data.alert_frames[pind]
   if frame and frame.valid then
     unregister_ui(data.ui_elements, frame)
-    frame:destroy()
+    frame.destroy()
   end
   data.ui_elements[pind] = nil
   data.viewing_players[pind] = false
