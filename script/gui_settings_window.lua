@@ -373,7 +373,7 @@ function gui_settings_window.get_private_events()
 end
 
 function gui_settings_window.on_configuration_changed(data)
-  if data["Train_Alerts"] then
+  if data.mod_changes[defs.names.mod_name] then
     for pind in pairs(game.players) do
       reset(pind)
     end

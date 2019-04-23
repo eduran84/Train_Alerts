@@ -22,4 +22,18 @@ function util.register_ui(data, gui_element, action)
   data[pind][gui_element.index] = action
 end
 
+function util.format_version(version_string)
+  if version_string then
+    return string.format("%02d.%02d.%02d", string.match(version_string, "(%d+).(%d+).(%d+)"))
+  end
+end
+
+function util.is_version_below(version, version_to_compare_to)
+  version = util.format_version(version)
+  if version then
+    return version < util.format_version(version_to_compare_to)
+  end
+  return false
+end
+
 return util

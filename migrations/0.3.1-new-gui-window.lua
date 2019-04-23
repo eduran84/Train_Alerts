@@ -30,6 +30,7 @@ global.gui_settings_window = {
 }
 log2("Resetting global table.")
 
+
 -- Wipe old UI
 local mg = require("mod-gui")
 for pind, player in pairs(game.players) do
@@ -38,9 +39,8 @@ for pind, player in pairs(game.players) do
   end
   if mg.get_button_flow(player)["tral_toggle_button"] and mg.get_button_flow(player)["tral_toggle_button"].valid then
     mg.get_button_flow(player)["tral_toggle_button"].destroy()
+    log2("Deleting pre-0.3.0 UI.")
   end
   player.gui.left.clear()
   player.gui.center.clear()
-  global.gui_alert_window.show_on_alert[pind] = settings.get_player_settings(player)[defs.names.settings.open_on_alert].value or nil
-  log2("Resetting UI.")
 end

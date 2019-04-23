@@ -27,6 +27,7 @@ defs.events = {
 
 local mod_prefix = "tral_"
 defs.names.mod_prefix = mod_prefix
+defs.names.mod_name = "Train_Alerts"
 
 defs.names.styles = {
   -- shared styles

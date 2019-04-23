@@ -67,14 +67,12 @@ local function build_frame(pind)
     label.style.width = WIDTH[i]
   end
 
-  local alert_table = (
-    EGM_Frame.add_element(frame, {
-      type = "scroll-pane",
-      style = styles.table_pane,
-      vertical_scroll_policy = "auto",
-      horizontal_scroll_policy = "never",
-    })
-  )
+  local alert_table = EGM_Frame.add_element(frame, {
+    type = "scroll-pane",
+    style = styles.table_pane,
+    vertical_scroll_policy = "auto",
+    horizontal_scroll_policy = "never",
+  })
   return frame, alert_table
 end
 
@@ -87,7 +85,7 @@ local function reset(pind)
   data.ui_elements[pind] = nil
   data.viewing_players[pind] = false
   data.show_on_alert[pind] = settings.get_player_settings(game.players[pind])[names.settings.open_on_alert].value or nil
-  data.alert_frames[pind], data.alert_tables[pind] = build_frame
+  data.alert_frames[pind], data.alert_tables[pind] = build_frame(pind)
 end
 
 local function get_frame(pind)
@@ -321,7 +319,7 @@ function gui_alert_window.get_private_events()
 end
 
 function gui_alert_window.on_configuration_changed(data)
-  if data["Train_Alerts"] then
+  if data.mod_changes[defs.names.mod_name] then
     for pind in pairs(game.players) do
       reset(pind)
     end
