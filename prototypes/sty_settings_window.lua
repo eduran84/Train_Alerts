@@ -23,20 +23,6 @@ default[style_names.table_body_frame] = {
   padding = 0,
 }
 
-default[style_names.table_pane] = {
-  type = "scroll_pane_style",
-  vertical_flow_style = {
-    type = "vertical_flow_style",
-    padding = 0,
-  },
-  graphical_set = {},
-  top_padding  = 4,
-  right_padding = 0,
-  bottom_padding = 4,
-  left_padding = 0,
-  extra_padding_when_activated = 0,
-}
-
 default[style_names.table_row_flow] = {
   type = "horizontal_flow_style",
   vertical_align = "center"

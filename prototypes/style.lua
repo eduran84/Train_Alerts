@@ -3,6 +3,8 @@ style_names = defs.names.styles
 
 require("prototypes.sprites")
 
+-- shared styles --
+
 default[style_names.title_button] = {
   type = "button_style",
   parent = "close_button",
@@ -33,6 +35,19 @@ default[style_names.title] = {
   font_color = heading_font_color,
 }
 
-require("prototypes.eui.frame")
+default[style_names.table_pane] = {
+  type = "scroll_pane_style",
+  vertical_flow_style = {
+    type = "vertical_flow_style",
+    padding = 0,
+  },
+  graphical_set = {},
+  top_padding  = 4,
+  right_padding = 0,
+  bottom_padding = 4,
+  left_padding = 0,
+  extra_padding_when_activated = 0,
+}
+
 require("prototypes.sty_alert_window")
 require("prototypes.sty_settings_window")
