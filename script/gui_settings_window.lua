@@ -107,7 +107,7 @@ local function reset(pind)
   local frame = data.frames[pind]
   if frame and frame.valid then
     unregister_ui(data.ui_elements, frame)
-    frame:destroy()
+    frame.destroy()
   end
   data.ui_elements[pind] = nil
   for _, table_row in pairs(data.table_rows) do
@@ -181,7 +181,6 @@ do
           local box = flow_add(tb)
           register_ui(data.ui_elements, box, textbox_action)
           data.table_rows[train_id][pind].was_valid[box.index] = true
-          --log2("adding box", box, "\ntrain_data:",data.table_rows[train_id])
         end
         register_ui(
           data.ui_elements,
