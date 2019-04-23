@@ -300,6 +300,7 @@ function train_state_monitor.on_configuration_changed(data)
   end
   local mod_data = data.mod_changes[defs.names.mod_name]
   if mod_data and util.is_version_below(mod_data.old_version, "0.3.1") then
+    settings.global[names.refresh_interval].value = 1
     update_timeouts()
     init_train_states()
   end
