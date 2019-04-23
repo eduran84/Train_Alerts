@@ -1,4 +1,16 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.4.0
+Date: 2019-04-23
+
+  Features:
+    - Timeouts can be set for each individual train.
+      * Shift + Left-Click a train in the alert list to add it to a new exception list.
+      * Configure individual timeouts for each train on the exception list.
+
+  Changes:
+    - Refresh Interval is now also set in seconds, not ticks.
+
+---------------------------------------------------------------------------------------------------
 Version: 0.3.0
 Date: 2019-04-19
 
