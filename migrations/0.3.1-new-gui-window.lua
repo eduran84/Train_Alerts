@@ -23,7 +23,6 @@ global.train_state_monitor = {
 }
 
 global.gui_settings_window = {
-  viewing_players = {},
   frames = {},
   tables = {},
   table_rows = {},

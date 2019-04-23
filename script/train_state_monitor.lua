@@ -126,6 +126,9 @@ local function on_train_changed_state(event)
   else
     timeout = timeout_values[new_state]
   end
+  if debug_mode then
+    log2("Train changed state.\nEvent:", event, "\ntimeout =", timeout, "\ntrain data:", data.monitored_trains[train_id])
+  end
   if not timeout then return end
   if data.monitored_trains[train_id] then
     -- remove or update already monitored train
@@ -137,9 +140,6 @@ local function on_train_changed_state(event)
   else
     start_monitoring(train_id, new_state, timeout, event.train)
   end
-  --if debug_mode then
-    --log2("Train changed state.\nOriginal event:", event, "\nparsed data: is_ok =", is_ok, ", timeout =", timeout, "\ntrain data:", data.monitored_trains[train_id])
-  --end
 end
 
 --[[ on_tick

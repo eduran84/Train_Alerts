@@ -1,4 +1,4 @@
-local width = defs.constants.textbox_width * 5 + defs.constants.id_label_width + 2*36 + 10
+local width = defs.constants.textbox_width * 5 + defs.constants.id_label_width + 2*36 + 148
 default[style_names.helper_label] = {
   type = "label_style",
   minimal_width = width,

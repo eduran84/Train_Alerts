@@ -21,7 +21,6 @@ local col2state = {
 
 local tsm
 local data = {
-  viewing_players = {},
   frames = {},
   tables = {},
   table_rows = {},
@@ -150,7 +149,6 @@ do
   add_train_to_list =  function(event, pind)
     local train_id = event.train_id
     if train_id and (pind or not(tsm.ignored_trains[train_id])) then
-      tsm.ignored_trains[train_id] = tsm.ignored_trains[train_id] or {train = tsm.monitored_trains[train_id].train}
       data.table_rows[train_id] = data.table_rows[train_id] or {}
 
       local label_action = {name = "train_label_clicked", train_id = train_id}
@@ -159,7 +157,7 @@ do
       local timeout_values, players
       if pind then
         players = {[pind] = true}
-        timeout_values = tsm.ignored_trains[train_id].timeout_values
+        timeout_values = tsm.ignored_trains[train_id].timeout_values or shared.train_state_monitor.timeout_values
       else
         players = game.players
         timeout_values = shared.train_state_monitor.timeout_values
@@ -184,6 +182,7 @@ do
           local box = flow_add(tb)
           register_ui(data.ui_elements, box, textbox_action)
           data.table_rows[train_id][pind].was_valid[box.index] = true
+          --log2("adding box", box, "\ntrain_data:",data.table_rows[train_id])
         end
         register_ui(
           data.ui_elements,
@@ -206,6 +205,7 @@ do
           {name = "reset_timeouts", train_id = train_id}
         )
       end
+      tsm.ignored_trains[train_id] = tsm.ignored_trains[train_id] or {train = tsm.monitored_trains[train_id].train}
     end
     if not pind then open(event.player_index) end
   end
@@ -246,7 +246,6 @@ gui_actions.timeout_text_changed = function(event, action)
   local player_data = data.table_rows[action.train_id][event.player_index]
   local was_valid = player_data.was_valid[box.index]
   local is_valid = num and num == floor(num) and num >= -1
-
   if is_valid and not was_valid then -- turned valid
     box.style = styles.textbox_valid
     player_data.invalid_count = player_data.invalid_count - 1
