@@ -133,14 +133,17 @@ do
   }
   local flow_definition = {type = "flow", ignored_by_interaction = true}
 
-  add_row = function(event)
+  add_row = function(event, pind)
     local train_id = event.train_id
     button_definition.name = element_names.train_button .. train_id
     label_definitions[1].caption = tostring(train_id)
     label_definitions[2].caption = event.state
     label_definitions[3].caption = event.time
     data.active_alert_count = data.active_alert_count + 1
-    for pind in pairs(game.players) do
+
+    local players = game.players
+    if pind then players = {[pind] = true} end
+    for pind in pairs(players) do
       local button = get_table(pind).add(button_definition)
       register_ui(
         data.ui_elements,
@@ -180,7 +183,7 @@ local function update_button(event)
         button.children[1].children[2].caption = event.state
       end
     else
-      add_row(event)
+      add_row(event, pind)
     end
   end
 end
@@ -245,6 +248,7 @@ end
 local function on_player_created(event)
   local pind = event.player_index
   data.show_on_alert[pind] = settings.get_player_settings(game.players[pind])[names.settings.open_on_alert].value or nil
+  build_frame(pind)
 end
 
 local function resize_window(event)

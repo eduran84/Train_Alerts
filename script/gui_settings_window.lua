@@ -25,12 +25,13 @@ local data = {
   frames = {},
   tables = {},
   table_rows = {},
+  ui_elements = {},
 }
 
 -- UI functions --
 
 local function build_frame(pind)
-  if debug_log then
+  if debug_mode then
     log2("Creating settings window for player", game.players[pind].name)
   end
   local frame = EGM_Frame.build(
@@ -103,10 +104,21 @@ local function build_frame(pind)
   return frame, table
 end
 
+local add_train_to_list  -- defined later
 local function reset(pind)
   local frame = data.frames[pind]
-  if frame and frame.valid then frame:destroy() end
+  if frame and frame.valid then
+    unregister_ui(data.ui_elements, frame)
+    frame:destroy()
+  end
+  data.ui_elements[pind] = nil
+  for _, table_row in pairs(data.table_rows) do
+    table_row[pind] = nil
+  end
   data.frames[pind], data.tables[pind] = build_frame(pind)
+  for train_id, train_data in pairs(tsm.ignored_trains) do
+    add_train_to_list({train_id = train_id}, pind)
+  end
 end
 
 local function get_frame(pind)
@@ -129,30 +141,37 @@ local function open(pind)
   game.players[pind].opened = frame
 end
 
-local add_train_to_list
 do
   local label_def =  {type = "label", style = styles.id_label, caption = ""}
   local textbox_def = {}
   for i = 2, 6 do
     textbox_def[i] = {type = "text-box", style = styles.textbox_valid, text = ""}
   end
-  add_train_to_list =  function(event)
+  add_train_to_list =  function(event, pind)
     local train_id = event.train_id
-    if train_id and not(tsm.ignored_trains[train_id]) then
-      tsm.ignored_trains[train_id] = {train = tsm.monitored_trains[train_id].train}
-      data.table_rows[train_id] = {}
+    if train_id and (pind or not(tsm.ignored_trains[train_id])) then
+      tsm.ignored_trains[train_id] = tsm.ignored_trains[train_id] or {train = tsm.monitored_trains[train_id].train}
+      data.table_rows[train_id] = data.table_rows[train_id] or {}
 
       local label_action = {name = "train_label_clicked", train_id = train_id}
       label_def.caption = train_id
 
-      local timeout_values = shared.train_state_monitor.timeout_values
+      local timeout_values, players
+      if pind then
+        players = {[pind] = true}
+        timeout_values = tsm.ignored_trains[train_id].timeout_values
+      else
+        players = game.players
+        timeout_values = shared.train_state_monitor.timeout_values
+      end
+
       for i = 2, 6 do
         local timeout = timeout_values[col2state[i]]
         textbox_def[i].text = timeout >= 0 and (timeout - offset) / 60 or -1
       end
 
       local textbox_action = {name = "timeout_text_changed", train_id = train_id}
-      for pind in pairs(game.players) do
+      for pind in pairs(players) do
         local flow = get_table(pind).add{
           type = "flow",
           direction = "horizontal",
@@ -188,11 +207,12 @@ do
         )
       end
     end
-    open(event.player_index)
+    if not pind then open(event.player_index) end
   end
 end
 
 local function remove_train_from_list(event, train_id)
+  local train = tsm.ignored_trains[train_id].train
   tsm.ignored_trains[train_id] = nil
   if data.table_rows[train_id] then
     for pind in pairs(game.players) do
@@ -201,76 +221,92 @@ local function remove_train_from_list(event, train_id)
       if row and row.valid then row.destroy() end
     end
     data.table_rows[train_id] = nil
+    raise_private_event(defs.events.on_timeouts_modified, {train = train})
   end
 end
 
 -- event handlers --
+local gui_actions = {}
+gui_actions.close_window = function(event, action)
+  get_frame(event.player_index).visible = false
+end
+gui_actions.train_label_clicked = function(event, action)
+  local train_id = action.train_id
+  if event.button == 2 and tsm.ignored_trains[train_id] then --LMB
+    util.train.open_train_gui(event.player_index, tsm.ignored_trains[train_id].train)
+    local frame = get_frame(event.player_index)
+    frame.visible = true
+  else
+    remove_train_from_list(event, train_id)
+  end
+end
+gui_actions.timeout_text_changed = function(event, action)
+  local box = event.element
+  local num = tonumber(box.text)
+  local player_data = data.table_rows[action.train_id][event.player_index]
+  local was_valid = player_data.was_valid[box.index]
+  local is_valid = num and num == floor(num) and num >= -1
 
-local gui_actions = {
-  close_window = function(event, action)
-    get_frame(event.player_index).visible = false
-  end,
-  train_label_clicked = function(event, action)
-    local train_id = action.train_id
-    if event.button == 2 and tsm.ignored_trains[train_id] then --LMB
-      util.train.open_train_gui(event.player_index, tsm.ignored_trains[train_id].train)
-      local frame = get_frame(event.player_index)
-      frame.visible = true
-    else
-      remove_train_from_list(event, train_id)
+  if is_valid and not was_valid then -- turned valid
+    box.style = styles.textbox_valid
+    player_data.invalid_count = player_data.invalid_count - 1
+    player_data.was_valid[box.index] = is_valid
+    if player_data.invalid_count == 0 then
+      box.parent.children[7].enabled = true  -- children[7] is the checkmark button
     end
-  end,
-  timeout_text_changed = function(event, action)
-    local box = event.element
-    local num = tonumber(box.text)
-    local player_data = data.table_rows[action.train_id][event.player_index]
-    local was_valid = player_data.was_valid[box.index]
-    local is_valid = num and num == floor(num) and num >= -1
-
-    if is_valid and not was_valid then -- turned valid
-      box.style = styles.textbox_valid
-      player_data.invalid_count = player_data.invalid_count - 1
-      player_data.was_valid[box.index] = is_valid
-      if player_data.invalid_count == 0 then
-        box.parent.children[7].enabled = true  -- children[7] is the checkmark button
+  elseif not is_valid and was_valid then -- turned invalid
+    box.style = styles.textbox_invalid
+    player_data.invalid_count = player_data.invalid_count + 1
+    box.parent.children[7].enabled = false
+    player_data.was_valid[box.index] = is_valid
+  end
+end
+gui_actions.confirm_timeouts = function(event, action)
+  local train_id = action.train_id
+  local flow = event.element.parent
+  tsm.ignored_trains[train_id].timeout_values = {
+    [defines.train_state.on_the_path] = -1,
+    [defines.train_state.arrive_station] = -1
+  }
+  for i = 2, 6 do
+    local timeout = tonumber(flow.children[i].text)
+    if timeout >= 0 then
+      timeout = timeout * 60 + offset
+    end
+    tsm.ignored_trains[train_id].timeout_values[col2state[i]] = timeout
+  end
+  if debug_mode then log2("New timeouts:", tsm.ignored_trains[train_id].timeout_values) end
+  raise_private_event(defs.events.on_timeouts_modified, {train = tsm.ignored_trains[train_id].train})
+  for pind, player in pairs(game.players) do
+    if pind ~= event.player_index then
+      gui_actions.reset_timeouts({player_index = pind, element = event.element}, {train_id = train_id})
+      --[[
+      data.table_rows[train_id][pind].invalid_count = 0
+      for box_id in pairs(data.table_rows[train_id][pind].was_valid) do
+        data.table_rows[train_id][pind].was_valid[box_id] = true
       end
-    elseif not is_valid and was_valid then -- turned invalid
-      box.style = styles.textbox_invalid
-      player_data.invalid_count = player_data.invalid_count + 1
-      box.parent.children[7].enabled = false
-      player_data.was_valid[box.index] = is_valid
+      for i = 2, 6 do
+        flow.children[i].text = tsm.ignored_trains[train_id].timeout_values[col2state[i]
+        flow.children[i].style = styles.textbox_valid
+      end   --]]
     end
-  end,
-  confirm_timeouts = function(event, action)
-    local train_id = action.train_id
-    local flow = event.element.parent
-    tsm.ignored_trains[train_id].timeout_values = {
-      [defines.train_state.on_the_path] = -1,
-      [defines.train_state.arrive_station] = -1
-    }
-    for i = 2, 6 do
-      local timeout = tonumber(flow.children[i].text)
-      if timeout >= 0 then
-        timeout = timeout * 60 + offset
-      end
-      tsm.ignored_trains[train_id].timeout_values[col2state[i]] = timeout
-    end
-    log2("New timeouts:", tsm.ignored_trains[train_id].timeout_values)
-    raise_private_event(defs.events.on_timeouts_modified, {train = tsm.ignored_trains[train_id].train})
-  end,
+  end
+end
 
-  reset_timeouts = function(event, action)
-    local timeout_values = tsm.ignored_trains[action.train_id].timeout_values
-        or shared.train_state_monitor.timeout_values
-    local flow = event.element.parent
-    for i = 2, 6 do
-      local timeout = timeout_values[col2state[i]]
-      local box = flow.children[i]
-      box.text = timeout >=0 and (timeout - offset) / 60 or -1
-      box.style = styles.textbox_valid
-    end
-  end,
-}
+gui_actions.reset_timeouts = function(event, action)
+  local timeout_values = tsm.ignored_trains[action.train_id].timeout_values
+      or shared.train_state_monitor.timeout_values
+  local flow = event.element.parent
+  local player_data = data.table_rows[action.train_id][event.player_index]
+  for i = 2, 6 do
+    local timeout = timeout_values[col2state[i]]
+    local box = flow.children[i]
+    box.text = timeout >=0 and (timeout - offset) / 60 or -1
+    box.style = styles.textbox_valid
+    player_data.invalid_count = player_data.invalid_count - 1
+    player_data.was_valid[box.index] = true
+  end
+end
 
 local on_gui_input = function(event)
   local element = event.element
@@ -279,7 +315,7 @@ local on_gui_input = function(event)
   if not player_data then return end
   local action = player_data[element.index]
   if action then
-    --if debug_mode then log2("event:", event, "\nplayer data:", player_data, "action:", action) end
+    if debug_mode then log2("event:", event, "\nplayer data:", player_data, "action:", action) end
     gui_actions[action.name](event, action)
     return true
   end
@@ -296,13 +332,17 @@ local function on_gui_closed(event)
   end
 end
 
+local function on_player_created(event)
+  reset(event.player_index)
+end
+
 -- public module API --
 
 local events =
 {
   [defines.events.on_gui_click] = on_gui_input,
   [defines.events.on_gui_text_changed] = on_gui_input,
-  [defines.events.on_player_created] = nil,
+  [defines.events.on_player_created] = on_player_created,
   [defines.events.on_gui_closed] = on_gui_closed
 }
 
@@ -317,7 +357,7 @@ function gui_settings_window.on_init()
   global.gui_settings_window = global.gui_settings_window or data
   tsm = global.train_state_monitor
   for pind in pairs(game.players) do
-    --on_player_created({player_index = pind})
+    on_player_created({player_index = pind})
   end
 end
 
