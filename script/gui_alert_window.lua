@@ -54,7 +54,6 @@ local function build_frame(pind)
     }),
     {name = "open_settings"}
   )
-  data.alert_frames[pind] = frame
   frame.visible = false
 
   local tbl = EGM_Frame.add_element(frame, {type = "flow"})
@@ -68,7 +67,7 @@ local function build_frame(pind)
     label.style.width = WIDTH[i]
   end
 
-  data.alert_tables[pind] = (
+  local alert_table = (
     EGM_Frame.add_element(frame, {
       type = "scroll-pane",
       style = styles.table_pane,
@@ -76,7 +75,19 @@ local function build_frame(pind)
       horizontal_scroll_policy = "never",
     })
   )
-  return frame
+  return frame, alert_table
+end
+
+local function reset(pind)
+  local frame = data.alert_frames[pind]
+  if frame and frame.valid then
+    unregister_ui(data.ui_elements, frame)
+    frame:destroy()
+  end
+  data.ui_elements[pind] = nil
+  data.viewing_players[pind] = false
+  data.show_on_alert[pind] = settings.get_player_settings(game.players[pind])[names.settings.open_on_alert].value or nil
+  data.alert_frames[pind], data.alert_tables[pind] = build_frame
 end
 
 local function get_frame(pind)
@@ -84,7 +95,8 @@ local function get_frame(pind)
   if frame and frame.valid then
     return frame
   else
-    return build_frame(pind)
+    reset(pind)
+    return data.alert_frames[pind]
   end
 end
 
@@ -93,7 +105,7 @@ local function get_table(pind)
   if table and table.valid then
     return table
   else
-    build_frame(pind)
+    reset(pind)
     return data.alert_tables[pind]
   end
 end
@@ -246,9 +258,7 @@ local function on_toggle_shortcut(event)
 end
 
 local function on_player_created(event)
-  local pind = event.player_index
-  data.show_on_alert[pind] = settings.get_player_settings(game.players[pind])[names.settings.open_on_alert].value or nil
-  build_frame(pind)
+  reset(event.player_index)
 end
 
 local function resize_window(event)
@@ -311,6 +321,11 @@ function gui_alert_window.get_private_events()
 end
 
 function gui_alert_window.on_configuration_changed(data)
+  if data["Train_Alerts"] then
+    for pind in pairs(game.players) do
+      reset(pind)
+    end
+  end
 end
 
 return gui_alert_window

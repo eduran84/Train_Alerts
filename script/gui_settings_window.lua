@@ -1,5 +1,4 @@
 -- load modules
-local mod_gui = require("mod-gui")
 local EGM_Frame = require(defs.pathes.modules.EGM_Frame)
 
 --localize functions and variables
@@ -374,6 +373,11 @@ function gui_settings_window.get_private_events()
 end
 
 function gui_settings_window.on_configuration_changed(data)
+  if data["Train_Alerts"] then
+    for pind in pairs(game.players) do
+      reset(pind)
+    end
+  end
 end
 
 return gui_settings_window
