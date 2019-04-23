@@ -1,7 +1,15 @@
+local width = defs.constants.textbox_width * 5 + defs.constants.id_label_width + 2*36 + 10
+default[style_names.helper_label] = {
+  type = "label_style",
+  minimal_width = width,
+  maximal_width = width,
+  single_line = false,
+}
+
 default[style_names.table_header_frame] = {
   type = "frame_style",
   horizontally_stretchable = "on",
-  left_padding = 4,
+  padding = 0,
   direction = "horizontal",
   horizontal_flow_style = {
     type = "horizontal_flow_style",
@@ -11,6 +19,7 @@ default[style_names.table_header_frame] = {
 }
 default[style_names.table_body_frame] = {
   type = "frame_style",
+  horizontally_stretchable = "on",
   padding = 0,
 }
 
@@ -27,11 +36,6 @@ default[style_names.table_pane] = {
   bottom_padding = 4,
   left_padding = 4,
   extra_padding_when_activated = 0,
-}
-
-default[style_names.table_row_flow] = {
-  type = "horizontal_flow_style",
-  vertical_align = "center"
 }
 
 default[style_names.table_row_flow] = {

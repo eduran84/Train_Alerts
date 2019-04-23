@@ -23,6 +23,7 @@ defs.names.gui.frame = {
 
 defs.names.styles = {
   title_button = mod_prefix .. "title_button",
+  helper_label = mod_prefix .. "helper_label_ignore",
   table_header_frame = mod_prefix .. "tbl_header_frame",
   table_body_frame = mod_prefix .. "tbl_body_frame",
   table_pane = mod_prefix .. "tbl_pane",
@@ -34,8 +35,10 @@ defs.names.styles = {
 }
 
 defs.names.gui.sprites = {
-  questionmark_white = "tral_icon_questionmark_white",
-  ignore_white = "tral_icon_ignore_white",
+  questionmark_white = mod_prefix .. "icon_questionmark_white",
+  ignore_white = mod_prefix .. "icon_ignore_white",
+  no_path = mod_prefix .. "icon_no_path",
+  no_schedule = mod_prefix .. "icon_no_schedule",
 }
 
 defs.names.gui.elements = {
@@ -91,6 +94,8 @@ defs.pathes.sprites = {
   shortcut_x24_bw = sprite_path_sc .. "x24_bw.png",
   questionmark_white = sprite_path_icon .. "questionmark_white.png",
   ignore_white = sprite_path_icon .. "ignore_white.png",
+  no_path_icon = sprite_path_icon .. "no_path.png",
+  no_schedule_icon = sprite_path_icon .. "no_schedule.png",
 }
 local optera_lib = "__OpteraLib__.script."
 defs.pathes.modules = {
@@ -107,7 +112,6 @@ defs.constants.trains_per_tick = 15
 defs.constants.timeout_offset = 2
 defs.constants.button_inner_width = {50, 200, 50}
 defs.constants.button_outer_width = 325
-defs.constants.table_col_width = {100, 100, 100, 100, 100, 100}
 defs.constants.id_label_width = 100
 defs.constants.textbox_width = 80
 

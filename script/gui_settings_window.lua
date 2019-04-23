@@ -40,19 +40,29 @@ local function build_frame(pind)
     {name = "close_window"}
   )
   frame.visible = false
-  local flow = EGM_Frame.get_flow(frame)
+  local flow = EGM_Frame.get_flow(frame)  -- content flow of this frame
+
+  flow.add{
+    type = "label",
+    caption = {"tral.ignore-explainer-1"},
+    style = styles.helper_label,
+  }
+  flow.add{
+    type = "label",
+    caption = {"tral.ignore-explainer-2"},
+    style = styles.helper_label,
+  }
 
   local header_frame = flow.add{
     type = "frame",
     style = styles.table_header_frame,
   }
-
   local spritelist = {
     [2] = "item/rail-signal",
     [3] = "item/train-stop",
-    [4] = "utility/questionmark",
+    [4] = names.gui.sprites.no_path,
     [5] = "utility/show_player_names_in_map_view",
-    [6] = "utility/questionmark",
+    [6] = names.gui.sprites.no_schedule,
   }
 
   header_frame.add {type = "label", style = "caption_label", caption = {"tral.settings-col-header-1"}}.style.width = 100
@@ -64,14 +74,14 @@ local function build_frame(pind)
       tooltip = {"tral.settings-col-header-tt-"..i}
     }
   end
-
   local table = flow.add{
     type = "frame",
     style = styles.table_body_frame,
   }.add{
     type = "scroll-pane",
     style = styles.table_pane,
-    vertical_scroll_policy = "auto-and-reserve-space"
+    vertical_scroll_policy = "auto-and-reserve-space",
+    horizontal_scroll_policy = "never",
   }
   return frame, table
 end
@@ -149,12 +159,22 @@ do
         end
         register_ui(
           data.ui_elements,
-          flow_add{type = "sprite-button", sprite = "utility/confirm_slot", style = "slot_button"},
+          flow_add{
+            type = "sprite-button",
+            sprite = "utility/confirm_slot",
+            style = "slot_button",
+            tooltip = {"tral.settings-apply-tt"},
+          },
           {name = "confirm_timeouts", train_id = train_id}
         )
         register_ui(
           data.ui_elements,
-          flow_add{type = "sprite-button", sprite = "utility/set_bar_slot", style = "slot_button"},
+          flow_add{
+            type = "sprite-button",
+            sprite = "utility/set_bar_slot",
+            style = "slot_button",
+            tooltip = {"tral.settings-reset-tt"},
+            },
           {name = "reset_timeouts", train_id = train_id}
         )
       end

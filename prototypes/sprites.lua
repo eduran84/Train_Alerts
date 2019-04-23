@@ -20,4 +20,22 @@ data:extend({
     height = 64,
     scale = 0.5,
   },
+  {
+    type = "sprite",
+    name = names.no_path,
+    filename = pathes.no_path_icon,
+    priority = "high",
+    width = 32,
+    height = 32,
+    scale = 1,
+  },
+  {
+    type = "sprite",
+    name = names.no_schedule,
+    filename = pathes.no_schedule_icon,
+    priority = "high",
+    width = 64,
+    height = 64,
+    scale = 0.5,
+  },
 })
