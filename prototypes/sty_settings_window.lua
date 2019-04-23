@@ -25,16 +25,15 @@ default[style_names.table_body_frame] = {
 
 default[style_names.table_pane] = {
   type = "scroll_pane_style",
-  vertically_squashable = "on",
-  horizontally_squashable = "on",
-  vertical_flow_style = { type = "vertical_flow_style" },
-  horizontal_scrollbar_style = { type = "horizontal_scrollbar_style" },
-  vertical_scrollbar_style = { type = "vertical_scrollbar_style" },
+  vertical_flow_style = {
+    type = "vertical_flow_style",
+    padding = 0,
+  },
   graphical_set = {},
   top_padding  = 4,
-  right_padding = 4,
+  right_padding = 0,
   bottom_padding = 4,
-  left_padding = 4,
+  left_padding = 0,
   extra_padding_when_activated = 0,
 }
 

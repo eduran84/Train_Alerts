@@ -1,5 +1,5 @@
 local pathes = defs.pathes.sprites
-local names = defs.names.gui.sprites
+local names = defs.names.sprites
 
 data:extend({
   {

@@ -5,6 +5,7 @@ local EGM_Frame = require(defs.pathes.modules.EGM_Frame)
 local pairs, log2 = pairs, log2
 local register_ui, unregister_ui = util.register_ui, util.unregister_ui
 local names = defs.names
+local styles = names.styles
 local element_names = names.gui.elements
 local toggle_shortcut_name = names.controls.toggle_shortcut
 local WIDTH = defs.constants.button_inner_width
@@ -19,7 +20,7 @@ local data = {
   ui_elements = {},
 }
 
--- private UI functions
+-- UI functions --
 local function build_frame(pind)
   local player = game.players[pind]
   if debug_mode then log2("Creating Alert window for player", player.name) end
@@ -28,34 +29,36 @@ local function build_frame(pind)
     {
       caption = {"tral.frame-caption"},
       direction = "vertical",
-      style = "tral_transparent_frame",
+      style = styles.alert_window_frame,
     }
   )
   frame.style.maximal_height = settings.get_player_settings(player)[names.settings.window_height].value
+  --[[
   register_ui(
     data.ui_elements,
     EGM_Frame.add_button(frame, {
       type = "sprite-button",
       style = "tral_title_button",
       tooltip = {"tral.help-button-tt"},
-      sprite = names.gui.sprites.questionmark_white,
+      sprite = names.sprites.questionmark_white,
     }),
     {name = "show_help"}
-  )
+  )--]]
   register_ui(
     data.ui_elements,
     EGM_Frame.add_button(frame, {
       type = "sprite-button",
-      style = "tral_title_button",
+      style = styles.title_button,
       tooltip = {"tral.ignore-button-tt"},
-      sprite = names.gui.sprites.ignore_white,
+      sprite = "utility/clock",  --names.sprites.ignore_white,
     }),
     {name = "open_settings"}
   )
   data.alert_frames[pind] = frame
   frame.visible = false
 
-  local tbl = EGM_Frame.add_element(frame, {type = "table", column_count = 3})
+  local tbl = EGM_Frame.add_element(frame, {type = "flow"})
+  tbl.style.left_padding = 4
   for i = 1, 3 do
     local label = tbl.add{
       type = "label",
@@ -65,11 +68,14 @@ local function build_frame(pind)
     label.style.width = WIDTH[i]
   end
 
-  data.alert_tables[pind] = (EGM_Frame.add_element(frame, {
-    type = "scroll-pane",
-    vertical_scroll_policy = "auto",
-    horizontal_scroll_policy = "never",
-  }).add{type = "table", column_count = 1})
+  data.alert_tables[pind] = (
+    EGM_Frame.add_element(frame, {
+      type = "scroll-pane",
+      style = styles.table_pane,
+      vertical_scroll_policy = "auto",
+      horizontal_scroll_policy = "never",
+    })
+  )
   return frame
 end
 
@@ -116,14 +122,14 @@ do
   local tostring = tostring
   local button_definition = {
     type = "button",
-    style = "tral_button_row",
+    style = styles.row_button,
     name = element_names.train_button,
     tooltip = {"tral.button-tooltip"},
   }
   local label_definitions = {
-    [1] = {type = "label", style = "tral_label_id"},
-    [2] = {type = "label", style = "tral_label_state"},
-    [3] = {type = "label", style = "tral_label_time"}
+    [1] = {type = "label", style = styles.button_label_id},
+    [2] = {type = "label", style = styles.button_label_state},
+    [3] = {type = "label", style = styles.button_label_time}
   }
   local flow_definition = {type = "flow", ignored_by_interaction = true}
 
@@ -189,20 +195,17 @@ local gui_actions = {
   train_button_clicked = function(event, action)
     local train_id = action.train_id
     if event.button == 2 and tsm.monitored_trains[train_id] then
-      if event.shift then
-        -- Shift + LMB -> add train to ignore list
+      if event.shift then  -- Shift + LMB -> add train to ignore list
         raise_private_event(
           defs.events.on_train_ignored, {
             player_index = event.player_index,
             train_id = train_id,
           }
         )
-      else
-        -- LMB -> open train UI
+      else  -- LMB -> open train UI
         open_train_gui(event.player_index, tsm.monitored_trains[train_id].train)
       end
-    else
-      -- RMB -> remove train from list
+    else  -- RMB -> remove train from list
       raise_private_event(defs.events.on_alert_removed, train_id)
     end
   end,
@@ -263,6 +266,8 @@ local function on_settings_changed(event)
   end
 end
 
+-- public module API --
+
 local events =
 {
   [defines.events.on_gui_click] = on_gui_input,
@@ -271,14 +276,13 @@ local events =
   [defines.events.on_player_created] = on_player_created,
   [defines.events.on_runtime_mod_setting_changed] = on_settings_changed,
 }
-
 local private_events =
 {
   [defs.events.on_new_alert] = add_row,
   [defs.events.on_state_updated] = update_button,
   [defs.events.on_alert_expired] = delete_row,
 }
--- public module API
+
 local gui_alert_window = {}
 
 function gui_alert_window.on_init()

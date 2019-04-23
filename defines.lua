@@ -3,26 +3,47 @@ local defs = {
     gui = {}
   },
   dicts = {},
-  constants = {},
   pathes = {},
+}
+
+defs.constants = {
+  setting_frame_max_height = 700,
+  trains_per_tick = 15,
+  timeout_offset = 2,
+  button_inner_width = {50, 200, 50},
+  button_outer_width = 325,
+  id_label_width = 100,
+  textbox_width = 80,
+}
+
+defs.events = {
+  on_new_alert = 1,
+  on_state_updated = 2,
+  on_alert_expired = 3,
+  on_alert_removed = 10,
+  on_timeouts_modified = 11,
+  on_train_ignored = 20,
 }
 
 local mod_prefix = "tral_"
 defs.names.mod_prefix = mod_prefix
 
--- EGM names
-defs.names.gui.shared = {
-  vertical_spacer = "eui-shr/vertical-spacer",
-  horizontal_spacer = "eui-shr/horizontal-spacer",
-}
-defs.names.gui.frame = {
-  outer_frame = "eui-frm/outer_frame",
-  title_flow = "eui-frm/header_flow",
-  title = "eui-frm/title",
-}
-
 defs.names.styles = {
+  -- shared styles
+  vertical_spacer_flow = mod_prefix .. "vertical_spacer",
+  horizontal_spacer_flow = mod_prefix .. "horizontal_spacer",
+  title_flow = mod_prefix .. "title_header_flow",
+  title = mod_prefix .. "title",
   title_button = mod_prefix .. "title_button",
+
+  -- alert window styles
+  alert_window_frame = mod_prefix .. "transparent_frame",
+  row_button = mod_prefix .. "button_row",
+  button_label_id = mod_prefix .. "label_id",
+  button_label_state = mod_prefix .. "label_state",
+  button_label_time = mod_prefix .. "label_time",
+
+  -- settings window styles
   helper_label = mod_prefix .. "helper_label_ignore",
   table_header_frame = mod_prefix .. "tbl_header_frame",
   table_body_frame = mod_prefix .. "tbl_body_frame",
@@ -34,22 +55,16 @@ defs.names.styles = {
   textbox_invalid = mod_prefix .. "textbox_invalid",
 }
 
-defs.names.gui.sprites = {
+-- EGM names
+defs.names.gui.frame = {
+
+}
+
+defs.names.sprites = {
   questionmark_white = mod_prefix .. "icon_questionmark_white",
   ignore_white = mod_prefix .. "icon_ignore_white",
   no_path = mod_prefix .. "icon_no_path",
   no_schedule = mod_prefix .. "icon_no_schedule",
-}
-
-defs.names.gui.elements = {
-  train_button = "tral_train_button_",
-
-  ignore_button = "tral-ignore-button",
-  help_button = "tral-help-button",
-
-  setting_frame = "tral-settings-frame",
-  close_button = "tral-close-settings-button",
-  ignore_table = "tral-ignore-list-table"
 }
 
 defs.names.controls = {
@@ -58,7 +73,6 @@ defs.names.controls = {
   right_mouse = 4,
   toggle_shortcut = "tral-toggle-shortcut",
 }
-
 
 local tsm_prefix = mod_prefix .. "tsm_"
 defs.names.settings = {
@@ -74,13 +88,15 @@ defs.names.settings = {
   timeout_manual = tsm_prefix .. "manual",
 }
 
-defs.events = {
-  on_new_alert = 1,
-  on_state_updated = 2,
-  on_alert_expired = 3,
-  on_alert_removed = 10,
-  on_timeouts_modified = 11,
-  on_train_ignored = 20,
+defs.names.gui.elements = {
+  train_button = mod_prefix .. "train_button_",
+
+  ignore_button = mod_prefix .. "ignore-button",
+  help_button = mod_prefix .. "help-button",
+
+  setting_frame = mod_prefix .. "settings-frame",
+  close_button = mod_prefix .. "close-settings-button",
+  ignore_table = mod_prefix .. "ignore-list-table"
 }
 
 local tral_gfx_path = "__Train_Alerts__/graphics/"
@@ -97,6 +113,7 @@ defs.pathes.sprites = {
   no_path_icon = sprite_path_icon .. "no_path.png",
   no_schedule_icon = sprite_path_icon .. "no_schedule.png",
 }
+
 local optera_lib = "__OpteraLib__.script."
 defs.pathes.modules = {
   queue = "script.queue",
@@ -107,13 +124,6 @@ defs.pathes.modules = {
   logger = optera_lib .. "logger"
 }
 
-
-defs.constants.trains_per_tick = 15
-defs.constants.timeout_offset = 2
-defs.constants.button_inner_width = {50, 200, 50}
-defs.constants.button_outer_width = 325
-defs.constants.id_label_width = 100
-defs.constants.textbox_width = 80
 
 defs.dicts.train_state = {
   [defines.train_state.on_the_path] = {"train-states.on_the_path"},

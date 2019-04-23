@@ -1,8 +1,24 @@
 -- alert button styles
+
+default[style_names.alert_window_frame] = {
+  type = "frame_style",
+  use_header_filler = false,
+  left_padding = 4,
+  right_padding = 4,
+  graphical_set = {
+    base = {
+      filename = defs.pathes.sprites.gui_spritesheet,
+      position = {0, 17},
+      corner_size = 8
+    },
+    shadow = default_dirt,
+  }
+}
+
 local function rounded_button_glow(tint_value)
   return
   {
-    filename = "__Train_Alerts__/graphics/gui.png",
+    filename = defs.pathes.sprites.gui_spritesheet,
     position = {51, 17},
     corner_size = 16,
     tint = tint_value,
@@ -20,7 +36,7 @@ local function rounded_button_graphical_set(x, y, glow, size)
   end
   return {
     base = {
-      filename = "__Train_Alerts__/graphics/gui.png",
+      filename = defs.pathes.sprites.gui_spritesheet,
       position = {x, y},
       corner_size = size
     },
@@ -30,12 +46,11 @@ local function rounded_button_graphical_set(x, y, glow, size)
 
 end
 
-
-default["tral_button_row"] = {
+default[style_names.row_button] = {
   type = "button_style",
   horizontal_align = "left",
-  left_padding = 4,
-  right_padding = 4,
+  left_padding = 0,
+  right_padding = 0,
   minimal_width = defs.constants.button_outer_width,
   maximal_width = defs.constants.button_outer_width,
   default_graphical_set = rounded_button_graphical_set(0, 0),
@@ -43,21 +58,21 @@ default["tral_button_row"] = {
   clicked_graphical_set = rounded_button_graphical_set(51, 0),
   disabled_graphical_set = rounded_button_graphical_set(68, 0),
 }
-default["tral_label_id"] = {
+default[style_names.button_label_id] = {
   type = "label_style",
   parent = "tooltip_heading_label",
   horizontal_align = "right",
   minimal_width = defs.constants.button_inner_width[1],
   maximal_width = defs.constants.button_inner_width[1],
 }
-default["tral_label_state"] = {
+default[style_names.button_label_state] = {
   type = "label_style",
   parent = "tooltip_heading_label",
   horizontal_align = "left",
   minimal_width = defs.constants.button_inner_width[2],
   maximal_width = defs.constants.button_inner_width[2],
 }
-default["tral_label_time"] = {
+default[style_names.button_label_time] = {
   type = "label_style",
   parent = "tooltip_heading_label",
   horizontal_align = "right",

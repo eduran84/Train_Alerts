@@ -1,25 +1,21 @@
-local sty = defs.names.gui.frame
-local sty_shared = defs.names.gui.shared
+local styles = defs.names.styles
 
 local EGM_Frame = {}
 function EGM_Frame.build(parent, args)
-  local styles = args.styles or {}
-
   local frame = parent.add{
     type = "frame",
-    style = styles.outer_frame or sty.outer_frame,
+    style = args.style,
     name = args.name,
   }
-  local outer_flow = frame.add{type = "flow", direction = "vertical"} --frame.children[1]
-  local title_flow = outer_flow.add{type = "flow", style = sty.title_flow}
+  local outer_flow = frame.add{type = "flow", direction = "vertical"}  --frame.children[1]
+  local title_flow = outer_flow.add{type = "flow", style = styles.title_flow}
   title_flow.add{
     type = "label",
-    style = styles.title or sty.title,
+    style = args.title_style or styles.title,
     caption = args.caption,
     tooltip = args.tooltip
   }
-  title_flow.add{type = "flow", style = sty_shared.horizontal_spacer}
-
+  local spacer = title_flow.add{type = "flow", style = styles.horizontal_spacer_flow}
   local inner_flow = outer_flow.add{type = "flow", direction = args.direction or "vertical"}
   return frame
 end

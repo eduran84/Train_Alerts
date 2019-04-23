@@ -1,14 +1,23 @@
 -- load modules
 local mod_gui = require("mod-gui")
 local EGM_Frame = require(defs.pathes.modules.EGM_Frame)
-local styles = defs.names.styles
+
 --localize functions and variables
 local pairs, tonumber, floor, log2 = pairs, tonumber, math.floor, log2
 local register_ui, unregister_ui = util.register_ui, util.unregister_ui
 local raise_private_event = raise_private_event
+local styles = defs.names.styles
 local names = defs.names
 local element_names = names.gui.elements
 local offset = defs.constants.timeout_offset
+local col2state = {
+  -1,
+  defines.train_state.wait_signal,
+  defines.train_state.wait_station,
+  defines.train_state.no_path,
+  defines.train_state.manual_control,
+  defines.train_state.no_schedule,
+}
 
 local tsm
 local data = {
@@ -17,6 +26,8 @@ local data = {
   tables = {},
   table_rows = {},
 }
+
+-- UI functions --
 
 local function build_frame(pind)
   if debug_log then
@@ -28,8 +39,10 @@ local function build_frame(pind)
       name = element_names.setting_frame,
       caption = {"tral.setting-frame-caption"},
       direction = "vertical",
+      style = styles.alert_window_frame
     }
   )
+  frame.style.maximal_height = defs.constants.setting_frame_max_height
   register_ui(
     data.ui_elements,
     EGM_Frame.add_button(frame, {
@@ -60,12 +73,16 @@ local function build_frame(pind)
   local spritelist = {
     [2] = "item/rail-signal",
     [3] = "item/train-stop",
-    [4] = names.gui.sprites.no_path,
+    [4] = names.sprites.no_path,
     [5] = "utility/show_player_names_in_map_view",
-    [6] = names.gui.sprites.no_schedule,
+    [6] = names.sprites.no_schedule,
   }
 
-  header_frame.add {type = "label", style = "caption_label", caption = {"tral.settings-col-header-1"}}.style.width = 100
+  header_frame.add{
+    type = "label",
+    style = "caption_label",
+    caption = {"tral.settings-col-header-1"}
+  }.style.width = defs.constants.id_label_width
   header_frame.style.vertical_align = "center"
   for i = 2, 6 do
     local icon = header_frame.add{type = "flow", style = styles.image_flow}.add{
@@ -112,14 +129,6 @@ local function open(pind)
   game.players[pind].opened = frame
 end
 
-local col2state = {
-  -1,
-  defines.train_state.wait_signal,
-  defines.train_state.wait_station,
-  defines.train_state.no_path,
-  defines.train_state.manual_control,
-  defines.train_state.no_schedule,
-}
 local add_train_to_list
 do
   local label_def =  {type = "label", style = styles.id_label, caption = ""}
@@ -195,6 +204,8 @@ local function remove_train_from_list(event, train_id)
   end
 end
 
+-- event handlers --
+
 local gui_actions = {
   close_window = function(event, action)
     get_frame(event.player_index).visible = false
@@ -221,7 +232,7 @@ local gui_actions = {
       player_data.invalid_count = player_data.invalid_count - 1
       player_data.was_valid[box.index] = is_valid
       if player_data.invalid_count == 0 then
-        box.parent.children[7].enabled = true
+        box.parent.children[7].enabled = true  -- children[7] is the checkmark button
       end
     elseif not is_valid and was_valid then -- turned invalid
       box.style = styles.textbox_invalid
@@ -255,7 +266,7 @@ local gui_actions = {
     for i = 2, 6 do
       local timeout = timeout_values[col2state[i]]
       local box = flow.children[i]
-      box.text = timeout >=0 and (timeout - 2) / 60 or -1
+      box.text = timeout >=0 and (timeout - offset) / 60 or -1
       box.style = styles.textbox_valid
     end
   end,
@@ -285,6 +296,8 @@ local function on_gui_closed(event)
   end
 end
 
+-- public module API --
+
 local events =
 {
   [defines.events.on_gui_click] = on_gui_input,
@@ -298,7 +311,6 @@ local private_events =
   [defs.events.on_train_ignored] = add_train_to_list
 }
 
--- public module API
 local gui_settings_window = {}
 
 function gui_settings_window.on_init()
