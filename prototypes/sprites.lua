@@ -38,4 +38,22 @@ data:extend({
     height = 64,
     scale = 0.5,
   },
+  {
+    type = "sprite",
+    name = names.alert_disabled,
+    filename = pathes.alert_disabled_icon,
+    priority = "high",
+    width = 64,
+    height = 64,
+    scale = 1,
+  },
+  {
+    type = "sprite",
+    name = names.selection_tool,
+    filename = pathes.selection_tool_icon,
+    priority = "high",
+    width = 64,
+    height = 64,
+    scale = 1,
+  },
 })

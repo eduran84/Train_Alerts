@@ -1,6 +1,6 @@
 --localize functions and variables
-local Queue = require(defs.pathes.modules.queue)
-local pop, insert = Queue.pop, Queue.insert
+local queue = util.queue
+local pop, insert = queue.pop, queue.insert
 local pairs, max = pairs, math.max
 local ticks_to_timestring = util.misc.ticks_to_timestring
 local raise_private_event = raise_private_event
@@ -11,13 +11,15 @@ local trains_per_tick = defs.constants.trains_per_tick
 local train_state_dict = defs.dicts.train_state
 local timeout_values
 
+-- localize access to relevant global variables
+local st
 local data = {
   ltn_stops = {},
   active_alerts = {},
   monitored_trains = {},
   ignored_trains = {},
-  update_queue = Queue.new(),
-  alert_queue = Queue.new(),
+  update_queue = queue.new(),
+  alert_queue = queue.new(),
 }
 shared.train_state_monitor = {
   timeout_states = {}
@@ -27,9 +29,9 @@ local function stop_monitoring(train_id)
   if data.active_alerts[train_id] then
     raise_private_event(defs.events.on_alert_expired, train_id)
     data.active_alerts[train_id] = nil
-    Queue.remove_value(data.update_queue, train_id)
+    queue.remove_value(data.update_queue, train_id)
   end
-  Queue.remove_value(data.alert_queue, train_id)
+  queue.remove_value(data.alert_queue, train_id)
   data.monitored_trains[train_id] = nil
   if debug_mode then
     log2("No longer monitoring train", train_id)
@@ -38,16 +40,14 @@ end
 
 local function start_monitoring(train_id, new_state, timeout, train)
   --- add unmonitored train to monitor list
-  if new_state == wait_station_state and
-      data.ltn_stops and
-      timeout_values[wait_station_state] >= 0 then
-    -- dont trigger alert fors trains stopped at LTN depots
-    local stop_id = train.station and train.station.unit_number
-    if stop_id and data.ltn_stops[stop_id] and
-        data.ltn_stops[stop_id].isDepot then
-      return
+  if new_state == wait_station_state and timeout_values[wait_station_state] >= 0 then
+    -- dont trigger alert fors trains stopped at LTN depots and ignored stations
+    local stop_id = train.station and train.station.valid and train.station.unit_number
+    if  (data.ltn_stops[stop_id] and data.ltn_stops[stop_id].isDepot)
+        or (st.selected_entities[train.station.unit_number])
+        then return
     end
-  end -- if new_state == train_state.wait_station ...
+  end
   insert(data.alert_queue, game.tick + timeout, train_id)
   data.monitored_trains[train_id] = {
     state = new_state,
@@ -74,7 +74,7 @@ local function update_monitored_train(train_id, new_state, timeout)
     )
   else
     -- recalculate alert time
-    Queue.remove_value(data.alert_queue, train_id)
+    queue.remove_value(data.alert_queue, train_id)
     insert(
       data.alert_queue,
       max(train_data.start_time + timeout, game.tick+2),
@@ -97,7 +97,6 @@ local function full_state_check(event)
   else
     timeout = timeout_values[new_state]
   end
-  log2("full state check:", event, "\ntrain data:", train_data, "new state:", new_state)
   if not timeout then return end
   if data.monitored_trains[train_id] then
     if timeout == -1 then
@@ -148,21 +147,14 @@ end
   * checks update_queue for a train
   * if one exists, displayed time for that train is updated
   --]]
-local function button_params(id)
-  return {
-    type = "button",
-    style = "tral_button_row",
-    name = "tral_trainbt_" .. id,
-    tooltip = {"tral.button-tooltip"},
-  }
-end
 local on_new_alert = defs.events.on_new_alert
 local function on_tick(event)
   -- add train to alert
   local train_id = pop(data.alert_queue, event.tick)
   if train_id then
     local train_data = data.monitored_trains[train_id]
-    if train_data.train.valid then
+    local train = train_data.train
+    if train.valid and not (train.station and st.selected_entities[train.station.unit_number]) then
       data.active_alerts[train_id] = true
       insert(data.update_queue, event.tick + update_interval, train_id)
       raise_private_event(
@@ -197,6 +189,7 @@ local function on_tick(event)
     end
   end
 end
+script.on_event(defines.events.on_tick, on_tick)
 
 local function register_ltn_event()
   if remote.interfaces["logistic-train-network"] and remote.interfaces["logistic-train-network"].on_stops_updated then
@@ -258,10 +251,12 @@ local function on_settings_changed(event)
   end
 end
 
+-- public module API --
+
 local events =
 {
   [defines.events.on_train_changed_state] = on_train_changed_state,
-  [defines.events.on_tick] = on_tick,
+  --[defines.events.on_tick] = on_tick, -- not handled by event system to avoid overhead in on_tick
   [defines.events.on_runtime_mod_setting_changed] = on_settings_changed,
 }
 local private_events =
@@ -269,17 +264,19 @@ local private_events =
   [defs.events.on_alert_removed] = stop_monitoring,
   [defs.events.on_timeouts_modified] = full_state_check,
 }
--- public module API
+
 local train_state_monitor = {}
 
 function train_state_monitor.on_init()
   global.train_state_monitor = global.train_state_monitor or data
+  st = global.selection_tool
   update_timeouts()
   register_ltn_event()
 end
 
 function train_state_monitor.on_load()
   data = global.train_state_monitor
+  st = global.selection_tool
   update_timeouts()
   register_ltn_event()
 end

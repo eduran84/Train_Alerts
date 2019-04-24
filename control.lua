@@ -1,13 +1,20 @@
 defs = require("defines")
-util = require("script.my_util")
+util = require(defs.pathes.modules.util)
 logger = require(defs.pathes.modules.logger)
 logger.settings.class_dictionary.LuaGuiElement.index = true
+logger.add_debug_commands()
+logger.settings.class_dictionary.LuaItemStack = {
+  type = true,
+  count = true,
+  valid = true,
+  valid_for_read = true,
+}
 log2 = logger.log
 print = logger.print
 
 shared = {}
 
--- for debugging, to simulate UI elements becoming invalid
+--[[ debugging commands
 commands.add_command("reset", "",
   function(event)
     if debug_mode then
@@ -17,7 +24,14 @@ commands.add_command("reset", "",
     end
   end
 )
-
+commands.add_command("log_global", "",
+  function(event)
+    if debug_mode then
+      log2(global.gui_alert_window.ui_elements)
+    end
+  end
+)
+--]]
 local private_events = {}
 function raise_private_event(event, data)
   for _, handler in pairs(private_events[event]) do
@@ -26,6 +40,7 @@ function raise_private_event(event, data)
 end
 
 local modules = {
+  selection_tool = require("script/selection_tool"),
   train_state_monitor = require("script/train_state_monitor"),
   alert_window = require("script/gui_alert_window"),
   settings_window = require("script/gui_settings_window"),
@@ -43,15 +58,15 @@ local function register_events(modules)
     [defines.events.on_runtime_mod_setting_changed] = {on_settings_changed}
   }
 
-  for module_name, module in pairs (modules) do
+  for module_name, module in pairs(modules) do
     if module.get_events and module.get_private_events then
       local module_events = module.get_events()
-      for event, handler in pairs (module_events) do
+      for event, handler in pairs(module_events) do
         all_events[event] = all_events[event] or {}
         all_events[event][module_name] = handler
       end
       module_events = module.get_private_events()
-      for event, handler in pairs (module_events) do
+      for event, handler in pairs(module_events) do
         private_events[event] = private_events[event] or {}
         private_events[event][module_name] = handler
       end
@@ -60,10 +75,13 @@ local function register_events(modules)
     end
   end
 
-  for event, handlers in pairs (all_events) do
-    local action
-    action = function(event)
-      for _, handler in pairs (handlers) do
+  for event, handlers in pairs(all_events) do
+    if event == defines.events.on_tick then
+      error(logger.tostring("Don't use event handler system for on_tick."))
+    end
+    local pairs = pairs
+    local function action(event)
+      for _, handler in pairs(handlers) do
         handler(event)
       end
     end
@@ -74,7 +92,7 @@ end
 
 local function on_init()
   debug_mode = settings.global[defs.names.settings.debug_mode].value
-  for _, module in pairs (modules) do
+  for _, module in pairs(modules) do
     if module.on_init then
       module.on_init()
     end
@@ -85,7 +103,7 @@ script.on_init(on_init)
 
 local function on_load()
   debug_mode = settings.global[defs.names.settings.debug_mode].value
-  for _, module in pairs (modules) do
+  for _, module in pairs(modules) do
     if module.on_load then
       module.on_load()
     end
@@ -95,7 +113,7 @@ end
 script.on_load(on_load)
 
 local function on_configuration_changed(data)
-  for _, module in pairs (modules) do
+  for _, module in pairs(modules) do
     if module.on_configuration_changed then
       module.on_configuration_changed(data)
     end

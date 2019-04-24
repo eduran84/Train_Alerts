@@ -1,9 +1,8 @@
 global = {}
 
-
 debug_mode = settings.global[defs.names.settings.debug_mode].value
 
-local Queue = require(defs.pathes.modules.queue)
+local queue = util.queue
 global.gui_alert_window = {
   viewing_players = {},
   alert_frames = {},
@@ -18,8 +17,8 @@ global.train_state_monitor = {
   active_alerts = {},
   monitored_trains = {},
   ignored_trains = {},
-  update_queue = Queue.new(),
-  alert_queue = Queue.new(),
+  update_queue = queue.new(),
+  alert_queue = queue.new(),
 }
 
 global.gui_settings_window = {

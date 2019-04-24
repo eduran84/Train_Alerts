@@ -5,8 +5,8 @@ local EGM_Frame = require(defs.pathes.modules.EGM_Frame)
 local pairs, tonumber, floor, log2 = pairs, tonumber, math.floor, log2
 local register_ui, unregister_ui = util.register_ui, util.unregister_ui
 local raise_private_event = raise_private_event
-local styles = defs.names.styles
 local names = defs.names
+local styles = names.styles
 local element_names = names.gui.elements
 local offset = defs.constants.timeout_offset
 local col2state = {
@@ -17,7 +17,7 @@ local col2state = {
   defines.train_state.manual_control,
   defines.train_state.no_schedule,
 }
-
+-- localize access to relevant global variables
 local tsm
 local data = {
   frames = {},
@@ -225,10 +225,10 @@ end
 
 -- event handlers --
 local gui_actions = {}
-gui_actions.close_window = function(event, action)
+function gui_actions.close_window(event, action)
   get_frame(event.player_index).visible = false
 end
-gui_actions.train_label_clicked = function(event, action)
+function gui_actions.train_label_clicked(event, action)
   local train_id = action.train_id
   if event.button == 2 and tsm.ignored_trains[train_id] then --LMB
     util.train.open_train_gui(event.player_index, tsm.ignored_trains[train_id].train)
@@ -238,7 +238,7 @@ gui_actions.train_label_clicked = function(event, action)
     remove_train_from_list(event, train_id)
   end
 end
-gui_actions.timeout_text_changed = function(event, action)
+function gui_actions.timeout_text_changed(event, action)
   local box = event.element
   local num = tonumber(box.text)
   local player_data = data.table_rows[action.train_id][event.player_index]
@@ -258,7 +258,7 @@ gui_actions.timeout_text_changed = function(event, action)
     player_data.was_valid[box.index] = is_valid
   end
 end
-gui_actions.confirm_timeouts = function(event, action)
+function gui_actions.confirm_timeouts(event, action)
   local train_id = action.train_id
   local flow = event.element.parent
   tsm.ignored_trains[train_id].timeout_values = {

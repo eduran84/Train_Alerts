@@ -10,6 +10,7 @@ local element_names = names.gui.elements
 local toggle_shortcut_name = names.controls.toggle_shortcut
 local WIDTH = defs.constants.button_inner_width
 
+-- localize access to relevant global variables
 local tsm
 local data = {
   viewing_players = {},
@@ -44,6 +45,16 @@ local function build_frame(pind)
     }),
     {name = "show_help"}
   )--]]
+  register_ui(
+    data.ui_elements,
+    EGM_Frame.add_button(frame, {
+      type = "sprite-button",
+      style = styles.title_button,
+      tooltip = {"tral.select-button-tt"},
+      sprite = names.sprites.selection_tool,--ignore_white,
+    }),
+    {name = "give_selection_tool"}
+  )
   register_ui(
     data.ui_elements,
     EGM_Frame.add_button(frame, {
@@ -201,28 +212,41 @@ end
 local open_train_gui = util.train.open_train_gui
 local match, tonumber = string.match, tonumber
 local raise_private_event = raise_private_event
-local gui_actions = {
-  open_settings = function(event, action)
-    raise_private_event(defs.events.on_train_ignored, event)
-  end,
-  train_button_clicked = function(event, action)
-    local train_id = action.train_id
-    if event.button == 2 and tsm.monitored_trains[train_id] then
-      if event.shift then  -- Shift + LMB -> add train to ignore list
-        raise_private_event(
-          defs.events.on_train_ignored, {
-            player_index = event.player_index,
-            train_id = train_id,
-          }
-        )
-      else  -- LMB -> open train UI
-        open_train_gui(event.player_index, tsm.monitored_trains[train_id].train)
-      end
-    else  -- RMB -> remove train from list
-      raise_private_event(defs.events.on_alert_removed, train_id)
+local gui_actions = {}
+function gui_actions.open_settings(event, action)
+  raise_private_event(defs.events.on_train_ignored, event)
+end
+function gui_actions.train_button_clicked(event, action)
+  local train_id = action.train_id
+  if event.button == 2 and tsm.monitored_trains[train_id] then
+    if event.shift then  -- Shift + LMB -> add train to ignore list
+      raise_private_event(
+        defs.events.on_train_ignored, {
+          player_index = event.player_index,
+          train_id = train_id,
+        }
+      )
+    else  -- LMB -> open train UI
+      open_train_gui(event.player_index, tsm.monitored_trains[train_id].train)
     end
-  end,
-}
+  else  -- RMB -> remove train from list
+    raise_private_event(defs.events.on_alert_removed, train_id)
+  end
+end
+function gui_actions.give_selection_tool(event, action)
+  local player = game.players[event.player_index]
+  local cursor_stack = game.players[event.player_index].cursor_stack
+  if not(cursor_stack.valid and cursor_stack.valid_for_read and cursor_stack.type) then
+    cursor_stack.set_stack({name = names.controls.selection_tool})
+  else
+    player.surface.create_entity{
+      name="flying-text",
+      position=player.position,
+      text={"tral.clear-cursor-first"},
+      color={r=1,g=0,b=0}
+    }
+  end
+end
 
 local on_gui_input = function(event)
   local element = event.element
@@ -287,6 +311,7 @@ local events =
   [defines.events.on_lua_shortcut] = on_toggle_shortcut,
   [defines.events.on_player_created] = on_player_created,
   [defines.events.on_runtime_mod_setting_changed] = on_settings_changed,
+  [names.controls.selection_tool_hotkey] = gui_actions.give_selection_tool
 }
 local private_events =
 {

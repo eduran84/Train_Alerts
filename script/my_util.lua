@@ -36,4 +36,49 @@ function util.is_version_below(version, version_to_compare_to)
   return false
 end
 
+local q = {}
+util.queue = q
+
+function q.new()
+  return {array = {}, hash = {}}
+end
+
+local function find_free_index(array, index, value)
+  if array[index] then
+    index = find_free_index(array, index + 1, value)
+  end
+  return index
+end
+
+function q.insert(queue, index, value)
+ if queue.array[index] then
+    index = find_free_index(queue.array, index + 1, value)
+  end
+  queue.array[index] = value
+  queue.hash[value] =  index
+  return index
+end
+
+function q.pop(queue, index)
+  local value = queue.array[index]
+  if value ~= nil then
+    queue.array[index] = nil
+    queue.hash[value] = nil
+  end
+  return value
+end
+
+function q.get_index(queue, value)
+  return queue.hash[value]
+end
+
+function q.remove_value(queue, value)
+  local index = queue.hash[value]
+  if index ~= nil then
+    queue.array[index] = nil
+    queue.hash[value] = nil
+  end
+  return index
+end
+
 return util

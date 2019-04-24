@@ -56,23 +56,22 @@ defs.names.styles = {
   textbox_invalid = mod_prefix .. "textbox_invalid",
 }
 
--- EGM names
-defs.names.gui.frame = {
-
-}
-
 defs.names.sprites = {
   questionmark_white = mod_prefix .. "icon_questionmark_white",
   ignore_white = mod_prefix .. "icon_ignore_white",
   no_path = mod_prefix .. "icon_no_path",
   no_schedule = mod_prefix .. "icon_no_schedule",
+  alert_disabled = mod_prefix .. "icon_alert_disabled",
+  selection_tool = mod_prefix .. "icon_selection_tool",
 }
 
 defs.names.controls = {
-  toggle_hotkey = "tral-toggle-hotkey",
+  toggle_hotkey = mod_prefix .. "toggle_hotkey",
+  selection_tool_hotkey = mod_prefix .. "selection_tool_hotkey",
   left_mouse = 2,
   right_mouse = 4,
-  toggle_shortcut = "tral-toggle-shortcut",
+  toggle_shortcut = mod_prefix .. "toggle_shortcut",
+  selection_tool = mod_prefix .. "selection_tool",
 }
 
 local tsm_prefix = mod_prefix .. "tsm_"
@@ -97,7 +96,7 @@ defs.names.gui.elements = {
 
   setting_frame = mod_prefix .. "settings-frame",
   close_button = mod_prefix .. "close-settings-button",
-  ignore_table = mod_prefix .. "ignore-list-table"
+  ignore_table = mod_prefix .. "ignore-list-table",
 }
 
 local tral_gfx_path = "__Train_Alerts__/graphics/"
@@ -113,11 +112,13 @@ defs.pathes.sprites = {
   ignore_white = sprite_path_icon .. "ignore_white.png",
   no_path_icon = sprite_path_icon .. "no_path.png",
   no_schedule_icon = sprite_path_icon .. "no_schedule.png",
+  alert_disabled_icon = sprite_path_icon .. "warning_disabled.png",
+  selection_tool_icon = sprite_path_icon .. "selection_tool.png",
 }
 
 local optera_lib = "__OpteraLib__.script."
 defs.pathes.modules = {
-  queue = "script.queue",
+  util = "script.my_util",
   EGM_Frame = "script.EGM_Frame",
   OL_misc = optera_lib .. "misc",
   OL_train = optera_lib .. "train",

@@ -1,6 +1,10 @@
 {
 "name": "Train_Alerts",
+<<<<<<< HEAD
 "version": "0.4.2",
+=======
+"version": "0.4.1",
+>>>>>>> master
 "title": "Train Alert GUI",
 "author": "eduran",
 "contact": "https://forums.factorio.com/memberlist.php?mode=viewprofile&u=1699",
