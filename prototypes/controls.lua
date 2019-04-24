@@ -1,7 +1,7 @@
 local filtered_entities = {
   "train-stop",
-  --"rail-signal",
-  --"rail-chain-signal",
+  "rail-signal",
+  "rail-chain-signal",
 }
 
 data:extend({
@@ -78,3 +78,14 @@ data:extend({
     },
   }
 })
+
+if defs.DEVELOPER_MODE then
+  data:extend({
+    {
+      type = "custom-input",
+      name = "tral_debug_hotkey",
+      key_sequence = "T",
+      consuming = "none",
+    },
+  })
+end

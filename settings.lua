@@ -25,7 +25,14 @@ data:extend({
 		default_value = 1,
 		minimum_value = 1,
 		maximum_value = 10,
-    order = "a"
+    order = "aa"
+	},
+  {
+		name = names.alert_on_damage,
+		setting_type = "runtime-global",
+		type = "bool-setting",
+    default_value = true,
+    order = "az"
 	},
 	{
 		name = names.debug_mode,

@@ -1,37 +1,8 @@
 defs = require("defines")
 util = require(defs.pathes.modules.util)
-logger = require(defs.pathes.modules.logger)
-logger.settings.class_dictionary.LuaGuiElement.index = true
-logger.add_debug_commands()
-logger.settings.class_dictionary.LuaItemStack = {
-  type = true,
-  count = true,
-  valid = true,
-  valid_for_read = true,
-}
-log2 = logger.log
-print = logger.print
 
 shared = {}
 
---[[ debugging commands
-commands.add_command("reset", "",
-  function(event)
-    if debug_mode then
-      game.players[event.player_index].gui.left.clear()
-      game.players[event.player_index].gui.center.clear()
-      log2(global.gui_alert_window.ui_elements)
-    end
-  end
-)
-commands.add_command("log_global", "",
-  function(event)
-    if debug_mode then
-      log2(global.gui_alert_window.ui_elements)
-    end
-  end
-)
---]]
 local private_events = {}
 function raise_private_event(event, data)
   for _, handler in pairs(private_events[event]) do
@@ -40,6 +11,7 @@ function raise_private_event(event, data)
 end
 
 local modules = {
+  dbg = require("script/debug"),
   selection_tool = require("script/selection_tool"),
   train_state_monitor = require("script/train_state_monitor"),
   alert_window = require("script/gui_alert_window"),
@@ -53,7 +25,6 @@ local function on_settings_changed(event)
 end
 
 local function register_events(modules)
-
   local all_events = {
     [defines.events.on_runtime_mod_setting_changed] = {on_settings_changed}
   }
@@ -77,7 +48,7 @@ local function register_events(modules)
 
   for event, handlers in pairs(all_events) do
     if event == defines.events.on_tick then
-      error(logger.tostring("Don't use event handler system for on_tick."))
+      error(logger.tostring("Don't use the event handler system for on_tick."))
     end
     local pairs = pairs
     local function action(event)
@@ -87,7 +58,6 @@ local function register_events(modules)
     end
     script.on_event(event, action)
   end
-
 end
 
 local function on_init()

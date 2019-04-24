@@ -1,9 +1,16 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.4.3
+Date: 2019-04-24
+
+  Features:
+    - Upgraded ignore list selection tool to also work work with signals.
+
+---------------------------------------------------------------------------------------------------
 Version: 0.4.2
 Date: 2019-04-24
 
   Features:
-    - Added ignore list selction tool to mark stations to not trigger alerts.
+    - Added ignore list selction tool to mark stations to not trigger alerts (thanks to Harag for this suggestion).
       * To get the ignore list tool, either press CTRL+SHIFT+T (configurable) or the new button at the top of the alert window.
       * Select stations to add them to the ignore list.
       * Shift + Select stations to remove them from the ignore list.

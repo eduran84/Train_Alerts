@@ -219,7 +219,7 @@ local function remove_train_from_list(event, train_id)
       if row and row.valid then row.destroy() end
     end
     data.table_rows[train_id] = nil
-    raise_private_event(defs.events.on_timeouts_modified, {train = train})
+    raise_private_event(defs.events.on_timeouts_modified, {train = train, force = true})
   end
 end
 
@@ -273,19 +273,10 @@ function gui_actions.confirm_timeouts(event, action)
     tsm.ignored_trains[train_id].timeout_values[col2state[i]] = timeout
   end
   if debug_mode then log2("New timeouts:", tsm.ignored_trains[train_id].timeout_values) end
-  raise_private_event(defs.events.on_timeouts_modified, {train = tsm.ignored_trains[train_id].train})
+  raise_private_event(defs.events.on_timeouts_modified, {train = tsm.ignored_trains[train_id].train, force = true})
   for pind, player in pairs(game.players) do
     if pind ~= event.player_index then
       gui_actions.reset_timeouts({player_index = pind, element = event.element}, {train_id = train_id})
-      --[[
-      data.table_rows[train_id][pind].invalid_count = 0
-      for box_id in pairs(data.table_rows[train_id][pind].was_valid) do
-        data.table_rows[train_id][pind].was_valid[box_id] = true
-      end
-      for i = 2, 6 do
-        flow.children[i].text = tsm.ignored_trains[train_id].timeout_values[col2state[i]
-        flow.children[i].style = styles.textbox_valid
-      end   --]]
     end
   end
 end

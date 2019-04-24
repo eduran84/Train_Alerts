@@ -86,6 +86,7 @@ defs.names.settings = {
   timeout_path = tsm_prefix .. "no_path",
   timeout_schedule = tsm_prefix .. "no_schedule",
   timeout_manual = tsm_prefix .. "manual",
+  alert_on_damage = tsm_prefix .. "alert_on_damage",
 }
 
 defs.names.gui.elements = {
@@ -137,6 +138,8 @@ defs.dicts.train_state = {
   [defines.train_state.wait_station] = {"train-states.wait_station"},
   [defines.train_state.manual_control_stop] = {"train-states.manual_control_stop"},
   [defines.train_state.manual_control] = {"train-states.manual_control"},
+  ["damaged"] = {"train-states.damaged"},
+  ["destroyed"] = {"train-states.destroyed"},
 }
 
 return defs

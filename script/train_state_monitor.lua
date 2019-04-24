@@ -6,9 +6,10 @@ local ticks_to_timestring = util.misc.ticks_to_timestring
 local raise_private_event = raise_private_event
 
 local update_interval = settings.global[defs.names.settings.refresh_interval].value * 60
-local wait_station_state = defines.train_state.wait_station
+local wait_station_state, wait_signal_state = defines.train_state.wait_station, defines.train_state.wait_signal
 local trains_per_tick = defs.constants.trains_per_tick
 local train_state_dict = defs.dicts.train_state
+local on_new_alert = defs.events.on_new_alert
 local timeout_values
 
 -- localize access to relevant global variables
@@ -45,8 +46,11 @@ local function start_monitoring(train_id, new_state, timeout, train)
     local stop_id = train.station and train.station.valid and train.station.unit_number
     if  (data.ltn_stops[stop_id] and data.ltn_stops[stop_id].isDepot)
         or (st.selected_entities[train.station.unit_number])
-        then return
+      then return
     end
+  elseif new_state == wait_signal_state and timeout_values[wait_signal_state] >= 0
+      and train.signal and train.signal.valid and st.selected_entities[train.signal.unit_number]
+    then  return -- no alerts for ignored signals
   end
   insert(data.alert_queue, game.tick + timeout, train_id)
   data.monitored_trains[train_id] = {
@@ -86,28 +90,60 @@ local function update_monitored_train(train_id, new_state, timeout)
   end
 end
 
-local function full_state_check(event)
-  local train = event.train
-  local train_id = train.id
-  local new_state = train.state
-  local train_data = data.ignored_trains[train_id]
-  local timeout
-  if train_data and train_data.timeout_values then
-    timeout = train_data.timeout_values[new_state]
-  else
-    timeout = timeout_values[new_state]
-  end
-  if not timeout then return end
-  if data.monitored_trains[train_id] then
-    if timeout == -1 then
-      stop_monitoring(train_id)
-    else
-      update_monitored_train(train_id, new_state, timeout)
-    end
-  elseif timeout then
-    start_monitoring(train_id, new_state, timeout, train)
-  end
+local is_rolling_stock = {
+  locomotive = true,
+  ["fluid-wagon"] = true,
+  ["cargo-wagon"] = true,
+  ["artillery-wagon"] = true,
+}
 
+local function on_entity_damaged(event)
+  local entity = event.entity
+  if is_rolling_stock[entity.type] then
+    local train = entity.train
+    local train_id = train.id
+    if data.active_alerts[train_id] then
+      local train_data = data.monitored_trains[train_id]
+      if train_data.state ~= "damaged" then
+        -- update state to damaged
+        train_data.state = "damaged"
+        train_data.start_time = game.tick
+        raise_private_event(
+          defs.events.on_state_updated,
+          {
+            name = "state",
+            train_id = train_id,
+            state = train_state_dict["damaged"],
+            time = "0:00",
+          }
+        )
+        if debug_mode then
+          log2("Train damaged:", event)
+        end
+      end
+    else
+      -- trigger new alert
+      queue.remove_value(data.alert_queue, train_id)
+      data.active_alerts[train_id] = true
+      insert(data.update_queue, event.tick + update_interval, train_id)
+      data.monitored_trains[train_id] = {
+        state = "damaged",
+        start_time = game.tick,
+        train = train
+      }
+      raise_private_event(
+        on_new_alert,
+        {
+          train_id = train_id,
+          state = train_state_dict["damaged"],
+          time = "0:00",
+        }
+      )
+      if debug_mode then
+        log2("Train damaged:", event)
+      end
+    end
+  end
 end
 
 --[[ on_state_change
@@ -133,7 +169,7 @@ local function on_train_changed_state(event)
     -- remove or update already monitored train
     if timeout == -1 then
       stop_monitoring(train_id)
-    elseif new_state ~= data.monitored_trains[train_id].state then
+    elseif new_state ~= data.monitored_trains[train_id].state or event.force then
       update_monitored_train(train_id, new_state, timeout)
     end
   else
@@ -147,7 +183,6 @@ end
   * checks update_queue for a train
   * if one exists, displayed time for that train is updated
   --]]
-local on_new_alert = defs.events.on_new_alert
 local function on_tick(event)
   -- add train to alert
   local train_id = pop(data.alert_queue, event.tick)
@@ -185,6 +220,7 @@ local function on_tick(event)
       )
       insert(data.update_queue, event.tick + update_interval, train_id)
     else
+
       stop_monitoring(train_id)
     end
   end
@@ -204,6 +240,18 @@ local function register_ltn_event()
   return false
 end
 
+local train_state = defines.train_state
+local offset = defs.constants.timeout_offset
+local names = defs.names.settings
+local function register_on_damaged_event()
+  if true then return end
+  if settings.global[names.alert_on_damage].value then
+    script.on_event(defines.events.on_entity_damaged, on_entity_damaged)
+  else
+    script.on_event(defines.events.on_entity_damaged, nil)
+  end
+end
+
 local function init_train_states()
   for _, surface in pairs(game.surfaces) do
     local trains = surface.get_trains()
@@ -216,9 +264,6 @@ local function init_train_states()
   end
 end
 
-local train_state = defines.train_state
-local offset = defs.constants.timeout_offset
-local names = defs.names.settings
 local timout_names = {
   [names.timeout_station] = train_state.wait_station,
   [names.timeout_signal] = train_state.wait_signal,
@@ -248,6 +293,9 @@ local function on_settings_changed(event)
     update_timeouts()
     log2("Mod settings changed by player", game.players[event.player_index].name, ".\nSetting changed event:", event, "\nUpdated timeouts:",timeout_values)
     init_train_states()
+    if event.setting == names.alert_on_damage then
+      register_on_damaged_event()
+    end
   end
 end
 
@@ -255,14 +303,15 @@ end
 
 local events =
 {
-  [defines.events.on_train_changed_state] = on_train_changed_state,
   --[defines.events.on_tick] = on_tick, -- not handled by event system to avoid overhead in on_tick
+  --[defines.events.on_entity_damaged] = on_entity_damaged  -- registered dynamically
+  [defines.events.on_train_changed_state] = on_train_changed_state,
   [defines.events.on_runtime_mod_setting_changed] = on_settings_changed,
 }
 local private_events =
 {
   [defs.events.on_alert_removed] = stop_monitoring,
-  [defs.events.on_timeouts_modified] = full_state_check,
+  [defs.events.on_timeouts_modified] = on_train_changed_state,
 }
 
 local train_state_monitor = {}
@@ -272,6 +321,7 @@ function train_state_monitor.on_init()
   st = global.selection_tool
   update_timeouts()
   register_ltn_event()
+  register_on_damaged_event()
 end
 
 function train_state_monitor.on_load()
@@ -279,6 +329,7 @@ function train_state_monitor.on_load()
   st = global.selection_tool
   update_timeouts()
   register_ltn_event()
+  register_on_damaged_event()
 end
 
 function train_state_monitor.get_events()
