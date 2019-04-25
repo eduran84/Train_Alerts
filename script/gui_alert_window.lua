@@ -28,6 +28,7 @@ local function build_frame(pind)
   local frame = EGM_Frame.build(
     mod_gui.get_frame_flow(player),
     {
+      name = element_names.alert_frame,
       caption = {"tral.frame-caption"},
       direction = "vertical",
       style = styles.alert_window_frame,
@@ -88,7 +89,17 @@ local function build_frame(pind)
 end
 
 local function reset(pind)
+  if debug_mode then
+    log2("Resetting alert window for player #", pind, "\n", debug.traceback())
+  else
+    log2("Resetting alert window for player #", pind)
+  end
   local frame = data.alert_frames[pind]
+  if frame and frame.valid then
+    unregister_ui(data.ui_elements, frame)
+    frame.destroy()
+  end
+  frame = game.players[pind].gui.left[element_names.alert_frame]
   if frame and frame.valid then
     unregister_ui(data.ui_elements, frame)
     frame.destroy()

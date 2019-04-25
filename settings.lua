@@ -27,6 +27,7 @@ data:extend({
 		maximum_value = 10,
     order = "aa"
 	},
+  --[[
   {
 		name = names.alert_on_damage,
 		setting_type = "runtime-global",
@@ -34,6 +35,7 @@ data:extend({
     default_value = true,
     order = "az"
 	},
+  --]]
 	{
 		name = names.debug_mode,
     setting_type = "runtime-global",

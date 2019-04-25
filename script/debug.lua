@@ -20,6 +20,7 @@ class_dict.LuaItemStack = {
 local events
 
 if defs.DEVELOPER_MODE then
+  debug_mode = true
   logger.add_debug_commands()
   logger.settings.max_depth = 6
   local LuaTrain = class_dict.LuaTrain

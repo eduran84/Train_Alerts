@@ -90,6 +90,7 @@ defs.names.settings = {
 }
 
 defs.names.gui.elements = {
+  alert_frame = mod_prefix .. "alert_frame",
   train_button = mod_prefix .. "train_button_",
 
   ignore_button = mod_prefix .. "ignore-button",

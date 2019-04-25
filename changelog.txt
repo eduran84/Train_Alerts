@@ -1,4 +1,11 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.4.4
+Date: 2019-04-25
+
+  Bugfixes:
+    - Fixed that UI elements created with older version were sometimes not cleaned up properly (mods.factorio.com/mod/Train_Alerts/discussion/5cc0d50b560df5000cda0836).
+
+---------------------------------------------------------------------------------------------------
 Version: 0.4.3
 Date: 2019-04-24
 

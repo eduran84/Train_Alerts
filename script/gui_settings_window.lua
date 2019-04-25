@@ -104,7 +104,17 @@ end
 
 local add_train_to_list  -- defined later
 local function reset(pind)
+  if debug_mode then
+    log2("Resetting settings window for player #", pind, "\n", debug.traceback())
+  else
+    log2("Resetting settings window for player #", pind)
+  end
   local frame = data.frames[pind]
+  if frame and frame.valid then
+    unregister_ui(data.ui_elements, frame)
+    frame.destroy()
+  end
+  frame = game.players[pind].gui.center[element_names.setting_frame]
   if frame and frame.valid then
     unregister_ui(data.ui_elements, frame)
     frame.destroy()
