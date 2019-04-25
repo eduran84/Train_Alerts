@@ -45,7 +45,7 @@ local function start_monitoring(train_id, new_state, timeout, train)
     -- dont trigger alert fors trains stopped at LTN depots and ignored stations
     local stop_id = train.station and train.station.valid and train.station.unit_number
     if  (data.ltn_stops[stop_id] and data.ltn_stops[stop_id].isDepot)
-        or (st.selected_entities[train.station.unit_number])
+        or (st.selected_entities[stop_id])
       then return
     end
   elseif new_state == wait_signal_state and timeout_values[wait_signal_state] >= 0
@@ -189,7 +189,7 @@ local function on_tick(event)
   if train_id then
     local train_data = data.monitored_trains[train_id]
     local train = train_data.train
-    if train.valid and not (train.station and st.selected_entities[train.station.unit_number]) then
+    if train.valid and not (train.station and train.station.valid and st.selected_entities[train.station.unit_number]) then
       data.active_alerts[train_id] = true
       insert(data.update_queue, event.tick + update_interval, train_id)
       raise_private_event(

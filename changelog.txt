@@ -1,4 +1,12 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.4.5
+Date: 2019-04-25
+
+  Bugfixes:
+    - Fixed that UI elements created with older version were sometimes not cleaned up properly, mark 2.
+    - Fix for crash caused by trains arriving at a temporary station.
+
+---------------------------------------------------------------------------------------------------
 Version: 0.4.4
 Date: 2019-04-25
 

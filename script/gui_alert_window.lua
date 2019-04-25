@@ -99,7 +99,7 @@ local function reset(pind)
     unregister_ui(data.ui_elements, frame)
     frame.destroy()
   end
-  frame = game.players[pind].gui.left[element_names.alert_frame]
+  frame = mod_gui.get_frame_flow(game.players[pind])[element_names.alert_frame]
   if frame and frame.valid then
     unregister_ui(data.ui_elements, frame)
     frame.destroy()

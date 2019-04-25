@@ -96,7 +96,7 @@ defs.names.gui.elements = {
   ignore_button = mod_prefix .. "ignore-button",
   help_button = mod_prefix .. "help-button",
 
-  setting_frame = mod_prefix .. "settings-frame",
+  setting_frame = mod_prefix .. "settings_frame",
   close_button = mod_prefix .. "close-settings-button",
   ignore_table = mod_prefix .. "ignore-list-table",
 }
