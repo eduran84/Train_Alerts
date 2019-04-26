@@ -26,6 +26,13 @@ shared.train_state_monitor = {
   timeout_states = {}
 }
 
+-- helper functions
+local function is_stop_ignored(stop_entity)
+  local stop_id = stop_entity and stop_entity.valid and stop_entity.unit_number
+  return  (data.ltn_stops[stop_id] and data.ltn_stops[stop_id].isDepot)
+          or (st.selected_entities[stop_id])
+end
+
 local function stop_monitoring(train_id)
   if data.active_alerts[train_id] then
     raise_private_event(defs.events.on_alert_expired, train_id)
@@ -43,11 +50,7 @@ local function start_monitoring(train_id, new_state, timeout, train)
   --- add unmonitored train to monitor list
   if new_state == wait_station_state and timeout_values[wait_station_state] >= 0 then
     -- dont trigger alert fors trains stopped at LTN depots and ignored stations
-    local stop_id = train.station and train.station.valid and train.station.unit_number
-    if  (data.ltn_stops[stop_id] and data.ltn_stops[stop_id].isDepot)
-        or (st.selected_entities[stop_id])
-      then return
-    end
+    if is_stop_ignored(train.station) then return end
   elseif new_state == wait_signal_state and timeout_values[wait_signal_state] >= 0
       and train.signal and train.signal.valid and st.selected_entities[train.signal.unit_number]
     then  return -- no alerts for ignored signals
@@ -172,7 +175,7 @@ local function on_train_changed_state(event)
     elseif new_state ~= data.monitored_trains[train_id].state or event.force then
       update_monitored_train(train_id, new_state, timeout)
     end
-  else
+  elseif timeout >= 0 then
     start_monitoring(train_id, new_state, timeout, event.train)
   end
 end
@@ -189,7 +192,7 @@ local function on_tick(event)
   if train_id then
     local train_data = data.monitored_trains[train_id]
     local train = train_data.train
-    if train.valid and not (train.station and train.station.valid and st.selected_entities[train.station.unit_number]) then
+    if train.valid and not is_stop_ignored(train.station) then
       data.active_alerts[train_id] = true
       insert(data.update_queue, event.tick + update_interval, train_id)
       raise_private_event(

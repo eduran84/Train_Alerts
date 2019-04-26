@@ -9,6 +9,7 @@ class_dict.LuaGuiElement.index = true
 
 local LuaEntity = class_dict.LuaEntity
 LuaEntity.position = nil
+LuaEntity.unit_number = true
 
 class_dict.LuaItemStack = {
   type = true,
@@ -24,6 +25,7 @@ if defs.DEVELOPER_MODE then
   logger.add_debug_commands()
   logger.settings.max_depth = 6
   local LuaTrain = class_dict.LuaTrain
+  --[[
   LuaTrain.locomotives = true
   LuaTrain.front_rail = true
   LuaTrain.rail_direction_from_front_rail = {
@@ -43,7 +45,9 @@ if defs.DEVELOPER_MODE then
       [defines.rail_direction.back] = "back"
     },
   }
-
+  --]]
+  LuaTrain.station = true
+  LuaTrain.signal = true
   local function log_train(event)
     local player = game.players[event.player_index]
     local selected = player.selected
@@ -66,7 +70,7 @@ if defs.DEVELOPER_MODE then
   end
   events =
   {
-    ["tral_debug_hotkey"] = log_train,
+    --["tral_debug_hotkey"] = log_train,
   }
 else
   events = {}
