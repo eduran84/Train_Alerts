@@ -157,26 +157,23 @@ do
   end
   add_train_to_list =  function(event, pind)
     local train_id = event.train_id
-    if train_id and (pind or not(tsm.ignored_trains[train_id])) then
+    if train_id and (pind or not(data.table_rows[train_id])) then
       data.table_rows[train_id] = data.table_rows[train_id] or {}
 
       local label_action = {name = "train_label_clicked", train_id = train_id}
       label_def.caption = train_id
-
-      local timeout_values, players
+      local timeout_values = tsm.ignored_trains[train_id].timeout_values or shared.train_state_monitor.timeout_values
+      local players
       if pind then
         players = {[pind] = true}
-        timeout_values = tsm.ignored_trains[train_id].timeout_values or shared.train_state_monitor.timeout_values
       else
         players = game.players
-        timeout_values = shared.train_state_monitor.timeout_values
       end
 
       for i = 2, 6 do
         local timeout = timeout_values[col2state[i]]
         textbox_def[i].text = timeout >= 0 and (timeout - offset) / 60 or -1
       end
-
       local textbox_action = {name = "timeout_text_changed", train_id = train_id}
       for pind in pairs(players) do
         local flow = get_table(pind).add{
@@ -213,13 +210,13 @@ do
           {name = "reset_timeouts", train_id = train_id}
         )
       end
-      tsm.ignored_trains[train_id] = tsm.ignored_trains[train_id] or {train = tsm.monitored_trains[train_id].train}
     end
-    if not pind then open(event.player_index) end
+    if not pind and event.player_index then open(event.player_index) end
   end
 end
 
-local function remove_train_from_list(event, train_id)
+local function remove_train_from_list(event)
+  local train_id = event.train_id
   local train = tsm.ignored_trains[train_id].train
   tsm.ignored_trains[train_id] = nil
   if data.table_rows[train_id] then
@@ -229,7 +226,9 @@ local function remove_train_from_list(event, train_id)
       if row and row.valid then row.destroy() end
     end
     data.table_rows[train_id] = nil
-    raise_private_event(defs.events.on_timeouts_modified, {train = train, force = true})
+    if train and train.valid then
+      raise_private_event(defs.events.on_timeouts_modified, {train = train, force = true})
+    end
   end
 end
 
@@ -245,7 +244,8 @@ function gui_actions.train_label_clicked(event, action)
     local frame = get_frame(event.player_index)
     frame.visible = true
   else
-    remove_train_from_list(event, train_id)
+    event.train_id = train_id
+    remove_train_from_list(event)
   end
 end
 function gui_actions.timeout_text_changed(event, action)
@@ -271,10 +271,7 @@ end
 function gui_actions.confirm_timeouts(event, action)
   local train_id = action.train_id
   local flow = event.element.parent
-  tsm.ignored_trains[train_id].timeout_values = {
-    [defines.train_state.on_the_path] = -1,
-    [defines.train_state.arrive_station] = -1
-  }
+  tsm.ignored_trains[train_id].timeout_values = {}
   for i = 2, 6 do
     local timeout = tonumber(flow.children[i].text)
     if timeout >= 0 then
@@ -341,12 +338,13 @@ local events =
   [defines.events.on_gui_click] = on_gui_input,
   [defines.events.on_gui_text_changed] = on_gui_input,
   [defines.events.on_player_created] = on_player_created,
-  [defines.events.on_gui_closed] = on_gui_closed
+  [defines.events.on_gui_closed] = on_gui_closed,
 }
 
 local private_events =
 {
-  [defs.events.on_train_ignored] = add_train_to_list
+  [defs.events.on_train_ignored] = add_train_to_list,
+  [defs.events.on_train_does_not_exist] = remove_train_from_list,
 }
 
 local gui_settings_window = {}

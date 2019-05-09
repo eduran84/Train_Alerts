@@ -1,4 +1,12 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.4.7
+Date: 2019-04-26
+
+  Bugfixes:
+    - Fixed that alert window did not always close automatically when empty.
+    - Fixed handling of alerts when carriages are added to/removed from trains.
+
+---------------------------------------------------------------------------------------------------
 Version: 0.4.6
 Date: 2019-04-26
 

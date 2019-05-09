@@ -6,6 +6,8 @@ local defs = {
   pathes = {},
 }
 
+defs.DEVELOPER_MODE = true
+
 defs.constants = {
   setting_frame_max_height = 700,
   trains_per_tick = 15,
@@ -23,6 +25,7 @@ defs.events = {
   on_alert_removed = 10,
   on_timeouts_modified = 11,
   on_train_ignored = 20,
+  on_train_does_not_exist = 21,
 }
 
 local mod_prefix = "tral_"

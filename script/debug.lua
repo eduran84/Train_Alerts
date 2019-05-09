@@ -14,7 +14,6 @@ LuaEntity.unit_number = true
 class_dict.LuaItemStack = {
   type = true,
   count = true,
-  valid = true,
   valid_for_read = true,
 }
 

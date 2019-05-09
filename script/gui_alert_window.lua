@@ -52,7 +52,7 @@ local function build_frame(pind)
       type = "sprite-button",
       style = styles.title_button,
       tooltip = {"tral.select-button-tt"},
-      sprite = names.sprites.selection_tool,--ignore_white,
+      sprite = names.sprites.selection_tool,
     }),
     {name = "give_selection_tool"}
   )
@@ -62,7 +62,7 @@ local function build_frame(pind)
       type = "sprite-button",
       style = styles.title_button,
       tooltip = {"tral.ignore-button-tt"},
-      sprite = "utility/clock",  --names.sprites.ignore_white,
+      sprite = "utility/clock",
     }),
     {name = "open_settings"}
   )
@@ -107,6 +107,7 @@ local function reset(pind)
   data.ui_elements[pind] = nil
   data.viewing_players[pind] = false
   data.show_on_alert[pind] = settings.get_player_settings(game.players[pind])[names.settings.open_on_alert].value or nil
+  data.active_alert_count = 0
   data.alert_frames[pind], data.alert_tables[pind] = build_frame(pind)
 end
 
@@ -231,6 +232,7 @@ function gui_actions.train_button_clicked(event, action)
   local train_id = action.train_id
   if event.button == 2 and tsm.monitored_trains[train_id] then
     if event.shift then  -- Shift + LMB -> add train to ignore list
+      tsm.ignored_trains[train_id] = tsm.ignored_trains[train_id] or {train = tsm.monitored_trains[train_id].train}
       raise_private_event(
         defs.events.on_train_ignored, {
           player_index = event.player_index,
